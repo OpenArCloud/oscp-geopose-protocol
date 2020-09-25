@@ -78,7 +78,7 @@ export interface GeoPoseResp {
 export interface GeoPoseReq {
   id: string;
   timestamp: Date;
-  type: string; //ex. localization-geopose
+  type: string; //ex. geopose
   sensors: Sensor[];
   sensorReadings: SensorReading[];
   priorPose?: GeoPoseResp[]; //previous geoposes
