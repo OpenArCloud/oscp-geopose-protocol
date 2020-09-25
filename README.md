@@ -13,10 +13,8 @@ Early version of a standard GeoPose API i.e. a request/response protocol for vis
 export interface CameraParam {
   model?: string; //UNKNOWN_CAMERA, SIMPLE_PINHOLE, SIMPLE_RADIAL, RADIAL, PINHOLE, OPENCV, FULL_OPENCV
   modelParams?: number[];
-  minDepth?: number; // for depth image
-  maxDepth?: number; // for depth image
-  minDisparity?: number; // for disparity image
-  maxDisparity?: number; // for disparity image
+  minMaxDepth?: number[]; // for depth image
+  minMaxDisparity?: number[]; // for disparity image
   baseline?: number; //dist between lenses on stereo camera
 }
 
