@@ -10,37 +10,14 @@ Early version of a standard GeoPose API i.e. a request/response protocol for vis
 
 
 ```js
-export interface CameraIntrinsics {
-  height: number;
-  width: number;
-  focal: number[]; //fx,fy
-  center: number[]; //cx, cy
-}
-
-export interface CameraExtrinsics {
-  rotationMatrix: number[]; //3x3
-  translationMatrix: number[]; //3x1
-}
-
-export interface CameraDistortion {
-  model: string; //Brown or Fisheye
-  coefficients: number[]; //[r0 r1 r2 t0 t1] or [r0, r1, r2, r3]
-}
-
-export interface CameraOptions {
+export interface CameraParam {
+  model?: string; //UNKNOWN_CAMERA, SIMPLE_PINHOLE, SIMPLE_RADIAL, RADIAL, PINHOLE, OPENCV, FULL_OPENCV
+  modelParams?: number[];
   minDepth?: number; // for depth image
   maxDepth?: number; // for depth image
   minDisparity?: number; // for disparity image
   maxDisparity?: number; // for disparity image
   baseline?: number; //dist between lenses on stereo camera
-}
-
-export interface Camera {
-  index: string;
-  intrinsics?: CameraIntrinsics;
-  extrinsics?: CameraExtrinsics;
-  distortion?: CameraDistortion;
-  options?: CameraOptions;
 }
 
 export interface Privacy {
@@ -50,20 +27,16 @@ export interface Privacy {
   dataSanitizationRequested: string[]; //server-side data sanitization requested
 }
 
-export interface Image {
-  cameraIndex: number;
-  sequenceIndex: number;
-  timestamp: Date;
+export interface CameraReading {
+  sequenceNumber: number;
   imageFormat: string; //ex. RGBA32, GRAY8, DEPTH
   height: number;
   width: number;
   imageBytes: string; //base64 encoded data
-  privacy: Privacy;
 }
 
 //aligns with https://w3c.github.io/geolocation-sensor/
-export interface Geolocation {
-  timestamp: Date;
+export interface GeolocationReading {
   latitude: number;
   longitude: number;
   altitude: number;
@@ -71,12 +44,20 @@ export interface Geolocation {
   altitudeAccuracy: number;
   heading: number;
   speed: number;
-  privacy: Privacy;
 }
 
-export interface SensorReadings {
-  image?: Image[];
-  geolocation?: Geolocation[];
+export interface Sensor {
+  id: string;
+  name?: string;
+  type: string; //camera, geolocation
+  params?: CameraParam
+}
+
+export interface SensorReading {
+  timestamp: Date;
+  sensorId: string;
+  privacy: Privacy;
+  reading?: (CameraReading | GeolocationReading)
 }
 
 export interface GeoPose {
@@ -98,8 +79,8 @@ export interface GeoPoseReq {
   id: string;
   timestamp: Date;
   type: string; //ex. localization-geopose
-  camera?: Camera[];
-  sensorReadings: SensorReadings;
+  sensors: Sensor[];
+  sensorReadings: SensorReading[];
   priorPose?: GeoPoseResp[]; //previous geoposes
 }
 ```
