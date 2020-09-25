@@ -28,8 +28,7 @@ export interface Privacy {
 export interface CameraReading {
   sequenceNumber: number;
   imageFormat: string; //ex. RGBA32, GRAY8, DEPTH
-  height: number;
-  width: number;
+  size: number[]; //width, height
   imageBytes: string; //base64 encoded data
 }
 
