@@ -19,7 +19,7 @@ export interface CameraParam {
 }
 
 export interface Privacy {
-  dataRentention: string[]; //acceptable policies for server-side data retention
+  dataRetention: string[]; //acceptable policies for server-side data retention
   dataAcceptableUse: string[]; //acceptable policies for server-side data use
   dataSanitizationApplied: string[]; //client-side data sanitization applied
   dataSanitizationRequested: string[]; //server-side data sanitization requested
