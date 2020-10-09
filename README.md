@@ -15,7 +15,6 @@ export interface CameraParam {
   modelParams?: number[];
   minMaxDepth?: number[]; // for depth image
   minMaxDisparity?: number[]; // for disparity image
-  baseline?: number; //dist between lenses on stereo camera
 }
 
 export interface Privacy {
