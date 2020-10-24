@@ -51,10 +51,37 @@ export interface WiFiReading {
   scanTimeEnd: Date;
 }
 
+export interface WiFiReading {
+  BSSID: string;
+  frequency: number;
+  RSSI: number;
+  SSID: string;
+  scanTimeStart: Date;
+  scanTimeEnd: Date;
+}
+
 export interface BluetoothReading {
   address: string;
   RSSI: number;
   name: string;
+}
+
+export interface AccelerometerReading {
+  x: number;
+  y: number;
+  z: number;
+}
+
+export interface GyroscopeReading {
+  x: number;
+  y: number;
+  z: number;
+}
+
+export interface MagnetometerReading {
+  x: number;
+  y: number;
+  z: number;
 }
 
 export interface Sensor {
@@ -64,7 +91,7 @@ export interface Sensor {
   rigIdentifier?: string
   rigRotation?: number[] //rotation quaternion from rig to sensor
   rigTranslation?: number[] //translation vector from rig to sensor
-  type: string; //camera, geolocation, wifi, bluetooth
+  type: string; //camera, geolocation, wifi, bluetooth, accelerometer, gyroscope, magnetometer
   params?: CameraParam
 }
 
@@ -72,7 +99,7 @@ export interface SensorReading {
   timestamp: Date;
   sensorId: string;
   privacy: Privacy;
-  reading?: (CameraReading | GeolocationReading | WiFiReading | BluetoothReading)
+  reading?: (CameraReading | GeolocationReading | WiFiReading | BluetoothReading | AccelerometerReading | GyroscopeReading | MagnetometerReading)
 }
 
 export interface GeoPose {
