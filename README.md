@@ -24,11 +24,17 @@ export interface Privacy {
   dataSanitizationRequested: string[]; //server-side data sanitization requested
 }
 
+export interface ImageOrientation {
+  mirrored: boolean;
+  rotation: number;
+}
+
 export interface CameraReading {
   sequenceNumber: number;
   imageFormat: string; //ex. RGBA32, GRAY8, DEPTH
   size: number[]; //width, height
   imageBytes: string; //base64 encoded data
+  imageOrientation?: ImageOrientation; 
 }
 
 //aligns with https://w3c.github.io/geolocation-sensor/
