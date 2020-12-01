@@ -1,215 +1,317 @@
 import base64
+import configparser
 import json
 import sys
 import uuid
 from collections import namedtuple
 from datetime import datetime
 
-import h3
+import h3 as h3
 import requests
-
-COUNTRIES = ["IT", "FI", "US", "RU"]
-TOPICS = ["transit", "history", "entertainment"]  # Augmented City SCD service supports these items
-
-TOKEN_URL = 'https://ssd-oscp.us.auth0.com/oauth/token'
-
-SERVICE_URL = 'https://dev1.ssd.oscp.cloudpose.io:7000'
-
-AUDIENCE = 'https://ssd.oscp.cloudpose.io'
-
-# Please use your own CLIENT_ID and CLIENT_SECRET to connect to TOKEN_URL
-CLIENT_ID = ...
-CLIENT_SECRET = ...
 
 # Latitude and longitude as named tuple
 Point = namedtuple('Point', 'lat lon')
+CHECK_PT = Point('47.609906', '-122.337810')  # Center point at Seattle nearby Pine.Str
+
+# Precision level 8.
+RES = 8  # The query API expects a client to provide a hexagonal coverage area by using an H3 index ex.
 
 
-def get_valid_jwt_by_auth0():
-    """
-    Uses payload and TOKEN_URL to get valid JWT token
-    :return: returns JWT token
-    """
-    payload = {
-        'grant_type': 'client_credentials',
-        'audience': AUDIENCE,
-        'client_id': CLIENT_ID,
-        'client_secret': CLIENT_SECRET
-    }
-    headers = {'content-type': 'application/json'}
-    result = requests.post(url=TOKEN_URL, headers=headers, data=json.dumps(payload, indent=2))
-    result.raise_for_status()
-    return result.json()['access_token']
+class Menu:
+    """Display a menu and respond to choices when run."""
 
+    def __init__(self, settings_file):
+        # Reading config file
+        config = configparser.ConfigParser()
+        config.read(settings_file)
+        self.countries = json.loads(config["spatial"]["COUNTRIES"])
+        self.topics = json.loads(config["spatial"]["TOPICS"])
+        self.token_url = config["urls"]["TOKEN_URL"]
+        self.service_url = config["urls"]["SERVICE_URL"]
+        self.audience = config["urls"]["AUDIENCE"]
+        self.client_id = config["Secret"]["CLIENT_ID"]
+        self.client_secret = config["Secret"]["CLIENT_SECRET"]
 
-def getting_ac_url(token, country):
-    """
-    Gets AC url (Needs authorization)
-    :param token: valid JWT token
-    :param country: valid country id from COUNTRIES
-    :return:
-    """
-    headers = {'content-type': 'application/json',
-               'Authorization': f'Bearer {token}'}
-    response = requests.get(SERVICE_URL + f"/{country}/provider/ssrs", headers=headers)
-    try:
-        ac_url = response.json()[0]["services"][0]["url"]  # We extract the first given service provider
-        return ac_url
-    except Exception:
-        print(response.status_code)
-        print(response.text)
-        return None
+        self.choices = {
+            '1': ('Get objects from AC provider', self.get_objects_from_ac),
+            '2': ('Get geopose by image from AC provider', self.get_geopose_from_ac),
+            '0': ('Quit', self.quit)
+        }
 
-
-def getting_ac_url_with_id(country, h3Index):
-    """
-    Gets AC url by h3index without authorization
-    :param country: valid country id from COUNTRIES
-    :param h3Index: valid h3Index
-    :return:
-    """
-    params = {"h3Index": h3Index}
-    response = requests.get(SERVICE_URL + f"/{country}/ssrs", params=params)
-    try:
-        ac_url = response.json()[0]["services"][0]["url"]  # We extract the first given service provider
-        return ac_url
-    except Exception:
-        print(response.status_code)
-        print(response.text)
-        return None
-
-
-def get_request(url, h3Index):
-    """
-    Helper function uses to access SCD service
-    :param url: url with topic endpoint
-    :param h3Index: valid h3Index
-    :return: returns response with topic
-    """
-    params = {"h3Index": h3Index}
-    response = requests.get(url, params=params)
-    return response.text
-
-
-def banner():
-    """
-    Eye candy
-    :return:
-    """
-    print("".center(80, '='))
-    print("AC demo application".center(80, ' '))
-    print("".center(80, '='))
-
-
-def base_actions():
-    """
-    Base actions selector for demo applications
-    :return:
-    """
-    return (input("Please, select action:\n"
-                  "1) Get objects from AC provider\n"
-                  "2) Get geopose by image from AC provider\n"
-                  "3) Exit\n(default: 1): \n") or "1")
-
-
-if __name__ == '__main__':
-    check_pt = Point('47.609906', '-122.337810')  # Center point at Seattle nearby Pine.Str
-
-    banner()
-    while True:
-        selected_action = base_actions()
-
-        if selected_action == '1':
-            answer = (input("Would you like to continue with authorization? (default: no): ") or "no")
-
-            lat = (input(f"Please, enter latitude (default: {check_pt.lat}): ") or check_pt.lat)
-            lon = (input(f"Please, enter longitude (default: {check_pt.lon}): ") or check_pt.lon)
-            res = 8  # The query API expects a client to provide a hexagonal coverage area by using an H3 index ex.
-            # precision level 8.
-
-            h3Index = h3.geo_to_h3(float(lat), float(lon), res)
-            country = (input("Please, enter the country for localization (default: US): ") or "US")
-
-            if answer == "yes":
-                token = get_valid_jwt_by_auth0()
-                ac_url = getting_ac_url(token, country)  # With authorization
-                if ac_url is None:
-                    print("Error getting AC url")
-                    break
-                print("Found service provider from SSD(With authorization): ", ac_url)
-            else:
-                ac_url = getting_ac_url_with_id(country, h3Index)
-                if ac_url is None:
-                    print("Error getting AC url")
-                    break
-                print("Found service provider from SSD: ", ac_url)
-
-            while True:
-                top = (input("Please, enter topic (default: history): ") or "history")
-                if top in TOPICS:
-                    new_url = ac_url + f"/scrs/{top}"
-                    break
-                else:
-                    top = input("Value not found!")
-            print(get_request(new_url, h3Index))
-
-        elif selected_action == '2':
-            img_file_name = (input(
-                "Please, enter image filename in current directory (default: seattle.jpg): ") or "seattle.jpg")
-            lat = (input(f"Please, enter latitude (default: 47.611550): ") or 47.611550)
-            lon = (input(f"Please, enter longitude (default: -122.337056): ") or -122.337056)
-            res = 8  # The query API expects a client to provide a hexagonal coverage area by using an H3 index ex.
-            # precision level 8.
-            h3Index = h3.geo_to_h3(float(lat), float(lon), res)
-            country = (input("Please, enter the country for localization (default: US): ") or "US")
-            ac_url = getting_ac_url_with_id(country, h3Index)
+    def __load_image(self, img_file_name):
+        """
+        Load image and encode it in base64
+        :param img_file_name:
+        :return:
+        """
+        try:
             img_file = open(img_file_name, 'rb').read()
             img_file_base64 = base64.b64encode(img_file)
-            img_file_base64_string = img_file_base64.decode('utf-8')
-            req_template = {
-                "id": str(uuid.uuid4()),
-                "timestamp": str(datetime.now()),
-                "type": "geopose",
-                "sensors": [
-                    {
-                        "id": "0",
-                        "type": "camera"
-                    },
-                    {
-                        "id": "1",
-                        "type": "geolocation"
+            return img_file_base64.decode('utf-8')
+        except IOError:
+            print("Wrong filename or file not exist\n")
+            return None
+        except:
+            print("Base64 encode/decode error")
+            return None
+
+    def __create_h3_from_lat_lon(self, lat, lon):
+        """
+        Get h3index from latitude and longitude
+        :param lat:
+        :param lon:
+        :return:
+        """
+        try:
+            return h3.geo_to_h3(float(lat), float(lon), RES)
+        except ValueError:
+            print("Wrong latitude or longitude values\n")
+            return None
+        except Exception as e:
+            print(f"Error: {e}")
+            return None
+
+    def __create_geopose_request(self, img_file_base64_string, lat, lon):
+        """
+        Create request body for geopose
+        :param img_file_base64_string:
+        :param lat:
+        :param lon:
+        :return:
+        """
+        return {
+            "id": str(uuid.uuid4()),
+            "timestamp": str(datetime.now()),
+            "type": "geopose",
+            "sensors": [
+                {
+                    "id": "0",
+                    "type": "camera"
+                },
+                {
+                    "id": "1",
+                    "type": "geolocation"
+                }
+            ],
+            "sensorReadings": [
+                {
+                    "timestamp": str(datetime.now()),
+                    "sensorId": "0",
+                    "reading": {
+                        "sequenceNumber": 0,
+                        "imageFormat": "JPG",
+                        "imageOrientation": {
+                            "mirrored": False,
+                            "rotation": 0
+                        },
+                        "imageBytes": img_file_base64_string
                     }
-                ],
-                "sensorReadings": [
-                    {
-                        "timestamp": str(datetime.now()),
-                        "sensorId": "0",
-                        "reading": {
-                            "sequenceNumber": 0,
-                            "imageFormat": "JPG",
-                            "imageOrientation": {
-                                "mirrored": False,
-                                "rotation": 0
-                            },
-                            "imageBytes": img_file_base64_string
-                        }
-                    },
-                    {
-                        "timestamp": str(datetime.now()),
-                        "sensorId": "1",
-                        "reading": {
-                            "latitude": lat,
-                            "longitude": lon,
-                            "altitude": 0
-                        }
+                },
+                {
+                    "timestamp": str(datetime.now()),
+                    "sensorId": "1",
+                    "reading": {
+                        "latitude": float(lat),
+                        "longitude": float(lon),
+                        "altitude": 0
                     }
-                ]
-            }
-            # Quaternion in response is in ARKit system (wxyz)
+                }
+            ]
+        }
+
+    def __get_valid_jwt_by_auth0(self):
+        """
+        Uses payload and TOKEN_URL to get valid JWT token
+        :return: returns JWT token
+        """
+        payload = {
+            'grant_type': 'client_credentials',
+            'audience': self.audience,
+            'client_id': self.client_id,
+            'client_secret': self.client_secret
+        }
+        headers = {'content-type': 'application/json'}
+        try:
+            result = requests.post(url=self.token_url, headers=headers, data=json.dumps(payload, indent=2))
+            return result.json()['access_token']
+        except:
+            print("Error getting JWT token. Please check your AUDIENCE, CLIENT_ID, CLIENT_SECRET values\n")
+            return None
+
+    def __get_ac_url(self, token, country):
+        """
+        Get AC url (Needs authorization)
+        Endpoint: /provider/ssrs
+        :param token: valid JWT token
+        :param country: valid country id from COUNTRIES
+        :return:
+        """
+        headers = {'content-type': 'application/json',
+                   'Authorization': f'Bearer {token}'}
+        response = requests.get(self.service_url + f"/{country}/provider/ssrs", headers=headers)
+        try:
+            ac_url = response.json()[0]["services"][0]["url"]  # We extract the first given service provider
+            return ac_url
+        except IndexError:
+            print("No coverage in this area\n")
+            return None
+        except:
+            print("Connection error to ssd service or wrong url\n")
+            return None
+
+    def __get_ac_url_with_id(self, country, h3Index):
+        f"""
+        Get AC url by h3index without authorization
+        Endpoint: /country/ssrs
+        :param country: valid country id from COUNTRIES
+        :param h3Index: valid h3Index
+        :return:
+        """
+        params = {"h3Index": h3Index}
+        try:
+            response = requests.get(self.service_url + f"/{country}/ssrs", params=params)
+            ac_url = response.json()[0]["services"][0]["url"]  # We extract the first given service provider
+            return ac_url
+        except IndexError:
+            print("No coverage in this area\n")
+            return None
+        except:
+            print("Connection error to ssd service or wrong url\n")
+            return None
+
+    def __get_request(self, ac_url, top, h3Index):
+        """
+        Access SCD service content
+        :param ac_url: url with topic endpoint
+        :param h3Index: valid h3Index
+        :return: returns response with topic
+        """
+        if top in self.topics:
+            new_url = ac_url + f"/scrs/{top}"
+        else:
+            print(f'Topic "{top}" not found!')
+            print(f'Correct values are: {self.topics}')
+            return
+        params = {"h3Index": h3Index}
+        try:
+            response = requests.get(new_url, params=params)
+            return json.dumps(response.json(), indent=4)
+        except:
+            print("Error getting content from AC scd service\n")
+            return None
+
+    def __post_geopose(self, ac_url, req_body):
+        """
+        Access SCD service geopose
+        :param ac_url:
+        :param req_body:
+        :return:
+        """
+        try:
             response = requests.post(url=f"{ac_url}/scrs/geopose",
                                      headers={'Content-Type': 'application/json'},
-                                     data=json.dumps(req_template))
-            print(json.dumps(response.json(), indent=4))
+                                     data=json.dumps(req_body))
+            return json.dumps(response.json(), indent=4)
+        except:
+            print("Error getting geopose from AC scd service\n")
+            return None
 
-        elif selected_action == '3':
-            sys.exit()
+    def display_menu(self):
+        """
+        Draw menu on console
+        :return:
+        """
+        print("".center(80, '='))
+        print("AC demo application".center(80, ' '))
+        print("".center(80, '='))
+        print()
+        for item in self.choices.keys():
+            print(f'{item}. {self.choices[item][0]}')
+        print()
+
+    def run(self):
+        """Display the menu and respond to choices."""
+        while True:
+            self.display_menu()
+            choice = input("Please, select action: ")
+            try:
+                action = self.choices.get(choice)[1]
+                action()
+            except TypeError:
+                print(f'"{choice}" is not a valid choice')
+                print()
+
+    def get_objects_from_ac(self):
+        """
+        Menu item
+        :return:
+        """
+        answer = (input("Would you like to continue with authorization? (default: no): ") or "no")
+        lat = (input(f"Please, enter latitude (default: {CHECK_PT.lat}): ") or CHECK_PT.lat)
+        lon = (input(f"Please, enter longitude (default: {CHECK_PT.lon}): ") or CHECK_PT.lon)
+        country = (input("Please, enter the country for localization (default: US): ") or "US")
+        h3_index = self.__create_h3_from_lat_lon(lat, lon)
+        if h3_index is None:
+            return
+
+        if answer == "yes":
+            token = self.__get_valid_jwt_by_auth0()
+            if token is None:
+                return
+            ac_url = self.__get_ac_url(token, country)  # With authorization
+            if ac_url is None:
+                return
+            print("Found service provider from SSD(With authorization): ", ac_url)
+        else:
+            ac_url = self.__get_ac_url_with_id(country, h3_index)
+            if ac_url is None:
+                return
+            print("Found service provider from SSD: ", ac_url)
+        top = (input("Please, enter topic (default: history): ") or "history")
+        response = self.__get_request(ac_url, top, h3_index)
+        if response is None:
+            return
+
+        # Method result
+        print(response)
+
+    def get_geopose_from_ac(self):
+        """
+        Menu item
+        :return:
+        """
+        img_file_name = (input(
+            "Please, enter image filename in current directory (default: seattle.jpg): ") or "seattle.jpg")
+        lat = (input(f"Please, enter latitude (default: 47.611550): ") or 47.611550)
+        lon = (input(f"Please, enter longitude (default: -122.337056): ") or -122.337056)
+        h3_index = self.__create_h3_from_lat_lon(lat, lon)
+        if h3_index is None:
+            return
+        country = (input("Please, enter the country for localization (default: US): ") or "US")
+        ac_url = self.__get_ac_url_with_id(country, h3_index)
+        if ac_url is None:
+            return
+        print("Found service provider from SSD: ", ac_url)
+        img_file_base64_string = self.__load_image(img_file_name)
+        if img_file_base64_string is None:
+            return
+        req_template = self.__create_geopose_request(img_file_base64_string, lat, lon)
+        response = self.__post_geopose(ac_url, req_template)
+        if response is None:
+            return
+
+        # Method result
+        # Quaternion in response is in ARKit system (wxyz)
+        print(response)
+
+    def quit(self):
+        """
+        Exit from applciation
+        :return:
+        """
+        print("Thank you for using demo application.")
+        sys.exit(0)
+
+
+if __name__ == "__main__":
+    Menu('settings.ini').run()
