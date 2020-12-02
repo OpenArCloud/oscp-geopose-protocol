@@ -35,6 +35,7 @@ class Menu:
         self.choices = {
             '1': ('Get objects from AC provider', self.get_objects_from_ac),
             '2': ('Get geopose by image from AC provider', self.get_geopose_from_ac),
+            '3': ('Get geopose by image from AC provider with near objects', self.get_geopose_objs_from_ac),
             '0': ('Quit', self.quit)
         }
 
@@ -216,6 +217,20 @@ class Menu:
             print("Error getting geopose from AC scd service\n")
             return None
 
+    def __get_precise_coords(self, response):
+        """
+        Get lat and lon from geopose response
+        :param response:
+        :return:
+        """
+        try:
+            jsonify_response = json.loads(response)
+            precise_lat = jsonify_response['pose']['latitude']
+            precise_lon = jsonify_response['pose']['longitude']
+            return precise_lat, precise_lon
+        except:
+            print('Error reading coords from geopose reponse')
+
     def display_menu(self):
         """
         Draw menu on console
@@ -301,8 +316,46 @@ class Menu:
             return
 
         # Method result
-        # Quaternion in response is in ARKit system (wxyz)
+        # Quaternion in response is in ARKit system (xyzw)
         print(response)
+
+    def get_geopose_objs_from_ac(self):
+        """
+        Menu item
+        :return:
+        """
+        img_file_name = (input(
+            "Please, enter image filename in current directory (default: seattle.jpg): ") or "seattle.jpg")
+        lat = (input(f"Please, enter latitude (default: 47.611550): ") or 47.611550)
+        lon = (input(f"Please, enter longitude (default: -122.337056): ") or -122.337056)
+        h3_index = self.__create_h3_from_lat_lon(lat, lon)
+        if h3_index is None:
+            return
+        country = (input("Please, enter the country for localization (default: US): ") or "US")
+        ac_url = self.__get_ac_url_with_id(country, h3_index)
+        if ac_url is None:
+            return
+        print("Found service provider from SSD: ", ac_url)
+        img_file_base64_string = self.__load_image(img_file_name)
+        if img_file_base64_string is None:
+            return
+        req_template = self.__create_geopose_request(img_file_base64_string, lat, lon)
+        response = self.__post_geopose(ac_url, req_template)
+        if response is None:
+            return
+        print(f'Geopose with precise coordinates is:\n {response}')
+        precise_lat, precise_lon = self.__get_precise_coords(response)
+        if precise_lat is None or precise_lon is None:
+            return
+        print(f'Get near objects with precise coordinates from geopose (lat:{precise_lat}, lon:{precise_lon}):')
+        h3_index = self.__create_h3_from_lat_lon(precise_lat, precise_lon)
+        if h3_index is None:
+            return
+        top = (input("Please, enter topic (default: history): ") or "history")
+        response_with_objects = self.__get_request(ac_url, top, h3_index)
+        if response_with_objects is None:
+            return
+        print(response_with_objects)
 
     def quit(self):
         """
