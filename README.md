@@ -129,7 +129,7 @@ export interface GeoPoseReq {
   type: string; //ex. geopose
   sensors: Sensor[];
   sensorReadings: SensorReading[];
-  priorPose?: GeoPoseResp[]; //previous geoposes
+  priorPoses?: GeoPoseResp[]; //previous geoposes
 }
 ```
 
