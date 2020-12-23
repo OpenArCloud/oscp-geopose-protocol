@@ -57,15 +57,6 @@ export interface WiFiReading {
   scanTimeEnd: Date;
 }
 
-export interface WiFiReading {
-  BSSID: string;
-  frequency: number;
-  RSSI: number;
-  SSID: string;
-  scanTimeStart: Date;
-  scanTimeEnd: Date;
-}
-
 export interface BluetoothReading {
   address: string;
   RSSI: number;
