@@ -93,7 +93,7 @@ export interface Sensor {
 }
 
 export interface SensorReading {
-  timestamp: Date;
+  timestamp: number;  //  The number of milliseconds* since the Unix Epoch.
   sensorId: string;
   privacy: Privacy;
   reading?: (CameraReading | GeolocationReading | WiFiReading | BluetoothReading | AccelerometerReading | GyroscopeReading | MagnetometerReading)
@@ -108,7 +108,7 @@ export interface GeoPose {
 
 export interface GeoPoseResp {
   id: string;
-  timestamp: Date;
+  timestamp: number;  //  The number of milliseconds* since the Unix Epoch.
   accuracy: number;  
   type: string; //ex. geopose
   pose: GeoPose; 
@@ -116,7 +116,7 @@ export interface GeoPoseResp {
 
 export interface GeoPoseReq {
   id: string;
-  timestamp: Date;
+  timestamp: number;  //  The number of milliseconds* since the Unix Epoch.
   type: string; //ex. geopose
   sensors: Sensor[];
   sensorReadings: SensorReading[];
@@ -137,7 +137,7 @@ export interface GeoPose {
 
 export interface GeoPoseResp {
   id: string;
-  timestamp: Date;
+  timestamp: number;  //  The number of milliseconds* since the Unix Epoch.
   accuracy: number;  
   type: string; //ex. geopose
   pose: GeoPose; 
