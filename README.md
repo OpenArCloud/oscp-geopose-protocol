@@ -25,8 +25,8 @@ export interface Privacy {
 }
 
 export interface ImageOrientation {
-  mirrored: boolean;
-  rotation: number;
+  mirrored: boolean;  // Value as provided from Camera sensor
+  rotation: number;  // Value as provided from Camera sensor
 }
 
 export interface CameraReading {
@@ -53,8 +53,8 @@ export interface WiFiReading {
   frequency: number;
   RSSI: number;
   SSID: string;
-  scanTimeStart: Date;
-  scanTimeEnd: Date;
+  scanTimeStart: number;  // The number of milliseconds* since the Unix Epoch.
+  scanTimeEnd: number;  // The number of milliseconds* since the Unix Epoch.
 }
 
 export interface BluetoothReading {
@@ -81,22 +81,35 @@ export interface MagnetometerReading {
   z: number;
 }
 
+export interface Quaternion {
+  x: number;
+  y: number;
+  z: number;
+  w: number;
+}
+
+export interface Vector3 {
+  x: number;
+  y: number;
+  z: number;
+}
+
 export interface Sensor {
   id: string;
   name?: string;
   model?: string;
   rigIdentifier?: string
-  rigRotation?: number[] //rotation quaternion from rig to sensor
-  rigTranslation?: number[] //translation vector from rig to sensor
+  rigRotation?: Quaternion; //rotation quaternion from rig to sensor
+  rigTranslation?: Vector3; //translation vector from rig to sensor
   type: string; //camera, geolocation, wifi, bluetooth, accelerometer, gyroscope, magnetometer
-  params?: CameraParam
+  params?: CameraParam;
 }
 
 export interface SensorReading {
   timestamp: number;  //  The number of milliseconds* since the Unix Epoch.
   sensorId: string;
   privacy: Privacy;
-  reading?: (CameraReading | GeolocationReading | WiFiReading | BluetoothReading | AccelerometerReading | GyroscopeReading | MagnetometerReading)
+  reading?: (CameraReading | GeolocationReading | WiFiReading | BluetoothReading | AccelerometerReading | GyroscopeReading | MagnetometerReading);
 }
 
 export interface GeoPose {
