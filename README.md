@@ -151,7 +151,10 @@ export interface GeoPose {
 export interface GeoPoseResp {
   id: string;
   timestamp: number;  //  The number of milliseconds* since the Unix Epoch.
-  accuracy: number;  
+  accuracy: {
+    position: number  //  mean for all components in meters
+    orientation: number // mean for all 3 angles in degrees
+  };  
   type: string; //ex. geopose
   pose: GeoPose; 
 }
