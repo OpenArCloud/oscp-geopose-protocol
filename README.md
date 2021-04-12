@@ -116,7 +116,7 @@ export interface GeoPose {
   longitude: number;
   latitude: number;
   ellipsoidHeight: number;
-  quaternion: number[];
+  quaternion: Quaternion;
 }
 
 export interface GeoPoseResp {
@@ -141,11 +141,18 @@ export interface GeoPoseReq {
 
 
 ```js
+export interface Quaternion {
+  x: number;
+  y: number;
+  z: number;
+  w: number;
+}
+
 export interface GeoPose {
   longitude: number;
   latitude: number;
   ellipsoidHeight: number;
-  quaternion: number[];
+  quaternion: Quaternion;
 }
 
 export interface GeoPoseResp {
