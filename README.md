@@ -124,7 +124,7 @@ export interface GeoPoseResp {
   timestamp: number;  //  The number of milliseconds* since the Unix Epoch.
   accuracy: number;  
   type: string; //ex. geopose
-  pose: GeoPose; 
+  geopose: GeoPose; 
 }
 
 export interface GeoPoseReq {
@@ -163,7 +163,7 @@ export interface GeoPoseResp {
     orientation: number // mean for all 3 angles in degrees
   };  
   type: string; //ex. geopose
-  pose: GeoPose; 
+  geopose: GeoPose; 
 }
 ```
 
