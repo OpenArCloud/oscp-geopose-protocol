@@ -9,7 +9,9 @@ from datetime import datetime
 import h3 as h3
 import piexif as piexif
 import requests
+import urllib3
 
+urllib3.disable_warnings()
 # Latitude and longitude as named tuple
 Point = namedtuple('Point', 'lat lon')
 CHECK_PT = Point('47.609906', '-122.337810')  # Center point at Seattle nearby Pine.Str
@@ -135,7 +137,7 @@ class Menu:
         }
         headers = {'content-type': 'application/json'}
         try:
-            result = requests.post(url=self.token_url, headers=headers, data=json.dumps(payload, indent=2))
+            result = requests.post(url=self.token_url, headers=headers, data=json.dumps(payload, indent=2), verify=False)
             return result.json()['access_token']
         except:
             print("Error getting JWT token. Please check your AUDIENCE, CLIENT_ID, CLIENT_SECRET values\n")
@@ -151,7 +153,7 @@ class Menu:
         """
         headers = {'content-type': 'application/json',
                    'Authorization': f'Bearer {token}'}
-        response = requests.get(self.service_url + f"/{country}/provider/ssrs", headers=headers)
+        response = requests.get(self.service_url + f"/{country}/provider/ssrs", headers=headers, verify=False)
         try:
             ac_url = response.json()[0]["services"][0]["url"]  # We extract the first given service provider
             return ac_url
@@ -172,7 +174,7 @@ class Menu:
         """
         params = {"h3Index": h3Index}
         try:
-            response = requests.get(self.service_url + f"/{country}/ssrs", params=params)
+            response = requests.get(self.service_url + f"/{country}/ssrs", params=params, verify=False)
             ac_url = response.json()[0]["services"][0]["url"]  # We extract the first given service provider
             return ac_url
         except IndexError:
@@ -197,7 +199,7 @@ class Menu:
             return
         params = {"h3Index": h3Index}
         try:
-            response = requests.get(new_url, params=params)
+            response = requests.get(new_url, params=params, verify=False)
             return json.dumps(response.json(), indent=4)
         except:
             print("Error getting content from AC scd service\n")
@@ -213,7 +215,7 @@ class Menu:
         try:
             response = requests.post(url=f"{ac_url}/scrs/geopose",
                                      headers={'Content-Type': 'application/json'},
-                                     data=json.dumps(req_body))
+                                     data=json.dumps(req_body), verify=False)
             return json.dumps(response.json(), indent=4)
         except:
             print("Error getting geopose from AC scd service\n")
@@ -229,7 +231,7 @@ class Menu:
         try:
             response = requests.post(url=f"{ac_url}/scrs/geopose_objs",
                                      headers={'Content-Type': 'application/json'},
-                                     data=json.dumps(req_body))
+                                     data=json.dumps(req_body), verify=False)
             return json.dumps(response.json(), indent=4)
         except:
             print("Error getting geopose from AC scd service\n")
