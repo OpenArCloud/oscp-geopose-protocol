@@ -118,6 +118,11 @@ export interface SensorReading {
   reading?: (CameraReading | GeolocationReading | WiFiReading | BluetoothReading | AccelerometerReading | GyroscopeReading | MagnetometerReading);
 }
 
+export interface GeoPose {
+  position: Position;
+  quaternion: Quaternion;
+}
+
 export interface GeoPoseResp {
   id: string;
   timestamp: number;  //  The number of milliseconds* since the Unix Epoch.
