@@ -81,6 +81,12 @@ export interface MagnetometerReading {
   z: number;
 }
 
+export interface Position {
+  lon: number;
+  lat: number;
+  h: number;
+}
+
 export interface Quaternion {
   x: number;
   y: number;
@@ -112,13 +118,6 @@ export interface SensorReading {
   reading?: (CameraReading | GeolocationReading | WiFiReading | BluetoothReading | AccelerometerReading | GyroscopeReading | MagnetometerReading);
 }
 
-export interface GeoPose {
-  longitude: number;
-  latitude: number;
-  ellipsoidHeight: number;
-  quaternion: Quaternion;
-}
-
 export interface GeoPoseResp {
   id: string;
   timestamp: number;  //  The number of milliseconds* since the Unix Epoch.
@@ -141,6 +140,12 @@ export interface GeoPoseReq {
 
 
 ```js
+export interface Position {
+  lon: number;
+  lat: number;
+  h: number;
+}
+
 export interface Quaternion {
   x: number;
   y: number;
@@ -149,9 +154,7 @@ export interface Quaternion {
 }
 
 export interface GeoPose {
-  longitude: number;
-  latitude: number;
-  ellipsoidHeight: number;
+  position: Position;
   quaternion: Quaternion;
 }
 
