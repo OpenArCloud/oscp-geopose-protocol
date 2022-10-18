@@ -30,15 +30,22 @@ export interface ImageOrientation {
 }
 
 export interface CameraReading {
+  timestamp: number;  //  The number of milliseconds* since the Unix Epoch.
+  sensorId: string;
+  privacy: Privacy; 
   sequenceNumber: number;
   imageFormat: string; //ex. RGBA32, GRAY8, DEPTH
   size: number[]; //width, height
   imageBytes: string; //base64 encoded data
   imageOrientation?: ImageOrientation; 
+  params?: CameraParam;
 }
 
 //aligns with https://w3c.github.io/geolocation-sensor/
 export interface GeolocationReading {
+  timestamp: number;  //  The number of milliseconds* since the Unix Epoch.
+  sensorId: string;
+  privacy: Privacy; 
   latitude: number;
   longitude: number;
   altitude: number;
@@ -49,6 +56,9 @@ export interface GeolocationReading {
 }
 
 export interface WiFiReading {
+  timestamp: number;  //  The number of milliseconds* since the Unix Epoch.
+  sensorId: string;
+  privacy: Privacy; 
   BSSID: string;
   frequency: number;
   RSSI: number;
@@ -58,24 +68,36 @@ export interface WiFiReading {
 }
 
 export interface BluetoothReading {
+  timestamp: number;  //  The number of milliseconds* since the Unix Epoch.
+  sensorId: string;
+  privacy: Privacy; 
   address: string;
   RSSI: number;
   name: string;
 }
 
 export interface AccelerometerReading {
+  timestamp: number;  //  The number of milliseconds* since the Unix Epoch.
+  sensorId: string;
+  privacy: Privacy; 
   x: number;
   y: number;
   z: number;
 }
 
 export interface GyroscopeReading {
+  timestamp: number;  //  The number of milliseconds* since the Unix Epoch.
+  sensorId: string;
+  privacy: Privacy; 
   x: number;
   y: number;
   z: number;
 }
 
 export interface MagnetometerReading {
+  timestamp: number;  //  The number of milliseconds* since the Unix Epoch.
+  sensorId: string;
+  privacy: Privacy; 
   x: number;
   y: number;
   z: number;
@@ -108,14 +130,16 @@ export interface Sensor {
   rigRotation?: Quaternion; //rotation quaternion from rig to sensor
   rigTranslation?: Vector3; //translation vector from rig to sensor
   type: string; //camera, geolocation, wifi, bluetooth, accelerometer, gyroscope, magnetometer
-  params?: CameraParam;
 }
 
-export interface SensorReading {
-  timestamp: number;  //  The number of milliseconds* since the Unix Epoch.
-  sensorId: string;
-  privacy: Privacy;
-  reading?: (CameraReading | GeolocationReading | WiFiReading | BluetoothReading | AccelerometerReading | GyroscopeReading | MagnetometerReading);
+export interface SensorReadings {
+  cameraReadings?: CameraReading[];
+  geolocationReadings?: GeolocationReading[];
+  wiFiReadings?: WiFiReading[];
+  bluetoothReadings?: BluetoothReading[];
+  accelerometerReadings?: AccelerometerReading[];
+  gyroscopeReadings?: GyroscopeReading[];
+  magnetometerReadings?: MagnetometerReading[];
 }
 
 export interface GeoPose {
@@ -136,7 +160,7 @@ export interface GeoPoseReq {
   timestamp: number;  //  The number of milliseconds* since the Unix Epoch.
   type: string; //ex. geopose
   sensors: Sensor[];
-  sensorReadings: SensorReading[];
+  sensorReadings: SensorReadings;
   priorPoses?: GeoPoseResp[]; //previous geoposes
 }
 ```
