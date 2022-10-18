@@ -6,7 +6,7 @@ OSCP GeoPose Protocol
 Early version of a standard GeoPose API i.e. a request/response protocol for visual localization. The GeoPose representation will be formalized through the [OGC GeoPose Working Group](https://www.ogc.org/projects/groups/geoposeswg).
 
 
-## GeoPose Protocol Request (version 1)
+## GeoPose Protocol Request (version 2)
 
 
 ```js
@@ -170,7 +170,7 @@ export interface GeoPoseReq {
 }
 ```
 
-## GeoPose Protocol Response (version 1)
+## GeoPose Protocol Response (version 2)
 
 
 ```js
