@@ -142,6 +142,11 @@ export interface SensorReadings {
   magnetometerReadings?: MagnetometerReading[];
 }
 
+export interface GeoPoseAccuracy {
+  position: number  //  mean for all components in meters
+  orientation: number // mean for all 3 angles in degrees
+}
+
 export interface GeoPose {
   position: Position;
   quaternion: Quaternion;
@@ -150,7 +155,7 @@ export interface GeoPose {
 export interface GeoPoseResp {
   id: string;
   timestamp: number;  //  The number of milliseconds* since the Unix Epoch.
-  accuracy: number;  
+  accuracy: GeoPoseAccuracy;
   type: string; //ex. geopose
   geopose: GeoPose; 
 }
@@ -182,6 +187,11 @@ export interface Quaternion {
   w: number;
 }
 
+export interface GeoPoseAccuracy {
+  position: number  //  mean for all components in meters
+  orientation: number // mean for all 3 angles in degrees
+}
+
 export interface GeoPose {
   position: Position;
   quaternion: Quaternion;
@@ -190,10 +200,7 @@ export interface GeoPose {
 export interface GeoPoseResp {
   id: string;
   timestamp: number;  //  The number of milliseconds* since the Unix Epoch.
-  accuracy: {
-    position: number  //  mean for all components in meters
-    orientation: number // mean for all 3 angles in degrees
-  };  
+  accuracy: GeoPoseAccuracy;
   type: string; //ex. geopose
   geopose: GeoPose; 
 }
