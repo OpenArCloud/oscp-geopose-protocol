@@ -151,8 +151,9 @@ __Response example__
 #### Projects using AC geopose
 https://github.com/OpenArCloud/browser_userclient/tree/Cesium - sources
 https://testing.browsar.app/usr/geopose/localizephoto - live example
-#### Try using with Cesium Sandcastle
 
+
+#### Try using with Cesium Sandcastle
 cesium.com allows you to see the result of work in live coding mode by link https://sandcastle.cesium.com/
 just paste the example below into the editor and press "Run (F8)" button
 See https://cesium.com/docs/code-examples/

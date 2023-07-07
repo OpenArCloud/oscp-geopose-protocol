@@ -10,8 +10,9 @@ import h3 as h3
 import piexif as piexif
 import requests
 import urllib3
-
 urllib3.disable_warnings()
+
+
 # Latitude and longitude as named tuple
 Point = namedtuple('Point', 'lat lon')
 CHECK_PT = Point('47.609906', '-122.337810')  # Center point at Seattle nearby Pine.Str
@@ -19,6 +20,8 @@ CHECK_PT = Point('47.609906', '-122.337810')  # Center point at Seattle nearby P
 # Precision level 8.
 RES = 8  # The query API expects a client to provide a hexagonal coverage area by using an H3 index ex.
 
+# Set this to True if you want to skip the SSD lookup and use the AC URL directly
+DEBUG_SKIP_SSD = True
 
 class Menu:
     """Display a menu and respond to choices when run."""
@@ -39,10 +42,11 @@ class Menu:
             '1': ('Get objects from AC provider', self.get_objects_from_ac),
             '2': ('Get geopose by image from AC provider', self.get_geopose_from_ac),
             '3': ('Get geopose by image from AC provider with near objects', self.get_geopose_objs_from_ac),
-            '4': ('Get geopose with ecef by image from AC provider with near objects',self.get_ecef_geopose_objs_from_ac),
+            '4': ('Get geopose with ecef by image from AC provider with near objects', self.get_ecef_geopose_objs_from_ac),
             '0': ('Quit', self.quit)
         }
 
+    # TODO: either move the conversion out or rename to load_image_base64
     def __load_image(self, img_file_name):
         """
         Load image and encode it in base64
@@ -54,7 +58,7 @@ class Menu:
             img_file_base64 = base64.b64encode(img_file)
             return img_file_base64.decode('utf-8')
         except IOError:
-            print("Wrong filename or file not exist\n")
+            print("Wrong filename or the file does not exist: " + img_file_name)
             return None
         except:
             print("Base64 encode/decode error")
@@ -151,6 +155,9 @@ class Menu:
         :param country: valid country id from COUNTRIES
         :return:
         """
+        if DEBUG_SKIP_SSD:
+            return "http://developer.augmented.city"
+
         headers = {'content-type': 'application/json',
                    'Authorization': f'Bearer {token}'}
         response = requests.get(self.service_url + f"/{country}/provider/ssrs", headers=headers, verify=False)
@@ -172,6 +179,9 @@ class Menu:
         :param h3Index: valid h3Index
         :return:
         """
+        if DEBUG_SKIP_SSD:
+            return "http://developer.augmented.city"
+
         params = {"h3Index": h3Index}
         try:
             response = requests.get(self.service_url + f"/{country}/ssrs", params=params, verify=False)
