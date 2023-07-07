@@ -223,7 +223,7 @@ class Menu:
         :return:
         """
         try:
-            response = requests.post(url=f"{ac_url}/scrs/geopose",
+            response = requests.post(url=f"{ac_url}/geopose",
                                      headers={'Content-Type': 'application/json'},
                                      data=json.dumps(req_body), verify=False)
             return json.dumps(response.json(), indent=4)
@@ -239,7 +239,7 @@ class Menu:
         :return:
         """
         try:
-            response = requests.post(url=f"{ac_url}/scrs/geopose_objs",
+            response = requests.post(url=f"{ac_url}/scrs/geopose_objs_local",
                                      headers={'Content-Type': 'application/json'},
                                      data=json.dumps(req_body), verify=False)
             return json.dumps(response.json(), indent=4)
@@ -255,8 +255,8 @@ class Menu:
         """
         try:
             jsonify_response = json.loads(response)
-            precise_lat = jsonify_response['pose']['latitude']
-            precise_lon = jsonify_response['pose']['longitude']
+            precise_lat = jsonify_response['geopose']['position']['lat']
+            precise_lon = jsonify_response['geopose']['position']['lon']
             return precise_lat, precise_lon
         except:
             print('Error reading coords from geopose reponse')
@@ -369,7 +369,7 @@ class Menu:
         :return:
         """
         img_file_name = (input(
-            "Please, enter image filename in current directory (default: seattle.jpg): ") or "seattle.jpg")
+            "Please, enter image filename in current directory (default: seattle_gps.jpg): ") or "seattle_gps.jpg")
         lat_from_img, lon_from_img = self.__get_exif_from_img(img_file_name)
         lat_from_img = lat_from_img or "N/A"
         lon_from_img = lon_from_img or "N/A"
@@ -402,7 +402,7 @@ class Menu:
         :return:
         """
         img_file_name = (input(
-            "Please, enter image filename in current directory (default: seattle.jpg): ") or "seattle.jpg")
+            "Please, enter image filename in current directory (default: seattle_gps.jpg): ") or "seattle_gps.jpg")
         lat_from_img, lon_from_img = self.__get_exif_from_img(img_file_name)
         lat_from_img = lat_from_img or "N/A"
         lon_from_img = lon_from_img or "N/A"
@@ -443,7 +443,7 @@ class Menu:
         :return:
         """
         img_file_name = (input(
-            "Please, enter image filename in current directory (default: seattle.jpg): ") or "seattle.jpg")
+            "Please, enter image filename in current directory (default: seattle_gps.jpg): ") or "seattle_gps.jpg")
         lat_from_img, lon_from_img = self.__get_exif_from_img(img_file_name)
         lat_from_img = lat_from_img or "N/A"
         lon_from_img = lon_from_img or "N/A"
