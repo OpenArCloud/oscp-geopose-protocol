@@ -69,7 +69,4 @@ $CMAKE_EXECUTABLE $SOURCE_DIR \
 $CMAKE_EXECUTABLE --build . --config Release
 $CMAKE_EXECUTABLE --build . --config Release --target install
 
-
-# These are only required for running
-export LD_LIBRARY_PATH=$OSCP_INSTALL_DIR/lib:$LD_LIBRARY_PATH
-export PATH=$OSCP_INSTALL_DIR/bin:$PATH
+cd $CUR_DIR
