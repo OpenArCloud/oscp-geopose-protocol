@@ -1,0 +1,47 @@
+OpenSSL compilation on Windows 10 using Visual Studio 2022 (nmake)
+
+https://github.com/openssl/openssl/blob/master/NOTES-WINDOWS.md
+
+# Install Perl
+http://strawberryperl.com/
+https://strawberryperl.com/download/5.32.1.1/strawberry-perl-5.32.1.1-64bit.msi
+Perl gets automatically added to the PATH
+C:\Strawberry\c\bin
+C:\Strawberry\perl\site\bin
+C:\Strawberry\perl\bin
+
+
+# Install NASM
+https://www.nasm.us/
+https://www.nasm.us/pub/nasm/releasebuilds/2.15.05/win64/nasm-2.15.05-installer-x64.exe
+NASM needs to be manually added to the PATH environment variable:
+C:\Users\<username>\AppData\Local\bin\NASM
+
+Restart your machine so that the PATH environment variable gets refreshed
+
+
+# OpenSSL
+## Clone the OpenSSL code somewhere
+```
+git clone https://github.com/openssl/openssl.git
+git checkout OpenSSL_1_1_1q
+```
+
+## Build
+The following commands must be executed in the "x64 Native Tools Command Prompt for VS 2022" (and NOT the Developed command prompt, not cmd.exe, and not PowerShell!). You can search for this x64 Native Tools in the Start menu
+Run "x64 Native Tools Command Prompt for VS 2022" in administrator mode for installing. (No need for adminstator mode for compiling.)
+
+```
+cd openssl
+set installdir=/path/to/install/dir
+perl Configure VC-WIN64A --prefix="%installdir%"
+nmake
+```
+Now go for a coffee because this takes a while...
+
+Now install
+```
+nmake install
+```
+
+Note that the installation folder needs to be added to the PATH so that other applications can use the OpenSSL libraries.
