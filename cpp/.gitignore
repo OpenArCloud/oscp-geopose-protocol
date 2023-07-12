@@ -1,0 +1,5 @@
+build/
+install/
+thirdparty/cpp-httplib
+thirdparty/json
+thirdparty/stduuid
