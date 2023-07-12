@@ -24,32 +24,6 @@ if(nlohmann_json_FOUND)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC nlohmann_json::nlohmann_json)
 
-# OpenSSL is required for httplib
-find_package(OpenSSL REQUIRED)
-if(OpenSSL_FOUND)
-    message(STATUS "Found OpenSSL: ${OPENSSL_VERSION}, ${OPENSSL_LIBRARIES}, ${OPENSSL_INCLUDE_DIR}")
-endif()
-target_link_libraries(${PROJECT_NAME} PRIVATE ${OPENSSL_LIBRARIES})
-target_include_directories(${PROJECT_NAME} PRIVATE ${OPENSSL_INCLUDE_DIR})
-
-# httplib (only required for the client)
-find_package(httplib)
-if(httplib_FOUND)
-    message(STATUS "Found httplib: ${httplib_VERSION}")
-    if (HTTPLIB_IS_COMPILED)
-        target_link_libraries(${PROJECT_NAME} PRIVATE httplib::httplib)
-    endif()
-endif()
-
-# stduuid (only required for the client)
-find_package(stduuid)
-if(stduuid_FOUND)
-    message(STATUS "Found stduuid: ${stduuid_VERSION}")
-    target_link_libraries(${PROJECT_NAME} PRIVATE stduuid)
-endif()
-
-
-
 # Install
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
@@ -62,13 +36,13 @@ configure_package_config_file(
     "${PROJECT_BINARY_DIR}/oscp-gppConfig.cmake"
     INSTALL_DESTINATION lib/cmake/oscp-gpp
 )
-install(EXPORT oscpTargets DESTINATION lib/cmake/oscp-gpp)
+install(EXPORT ${PROJECT_NAME}Targets DESTINATION lib/cmake/oscp-gpp)
 install(FILES "${PROJECT_BINARY_DIR}/oscp-gppConfigVersion.cmake"
     "${PROJECT_BINARY_DIR}/oscp-gppConfig.cmake"
     DESTINATION lib/cmake/oscp-gpp)
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION include)
 install(TARGETS ${PROJECT_NAME}
-    EXPORT oscpTargets
+    EXPORT ${PROJECT_NAME}Targets
     LIBRARY DESTINATION lib COMPONENT Runtime
     ARCHIVE DESTINATION lib COMPONENT Development
     RUNTIME DESTINATION bin COMPONENT Runtime

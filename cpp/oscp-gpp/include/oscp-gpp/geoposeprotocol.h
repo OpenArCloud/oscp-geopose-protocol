@@ -370,6 +370,8 @@ struct SensorReading {
     // TODO: not yet clear how to store the reading member to be able to store various SensorReadings
     // 1. store abstract class pointer and cast (but currently we do not store the SensorType, so cannot decide how to parse a received SensorReading)
     //struct AbstractSensorReading reading; // [optional] // (CameraReading | GeolocationReading | WiFiReading | BluetoothReading | AccelerometerReading | GyroscopeReading | MagnetometerReading);
+    // (This was implemented first for GPP v1)
+    //
     // 2. store as union (does not work yet)
     //union {
     //    CameraReading cameraReading;
@@ -380,7 +382,9 @@ struct SensorReading {
     //    GyroscopeReading gyroscopeReading;
     //    MagnetometerReading magnetometerReading;
     //};
+    //
     // 3. store all types separately (wasteful)
+    // (This was decided for GPP v2)
     CameraReading cameraReading;
     AccelerometerReading accelerometerReading;
     GeolocationReading geolocationReading;
@@ -389,7 +393,7 @@ struct SensorReading {
     GyroscopeReading gyroscopeReading;
     MagnetometerReading magnetometerReading;
 
-    // TODO: we must add the sensorType here, otherwise we cannot decide how to parse it!
+    // TODO: we must add the sensorType here, otherwise we cannot decide how to parse this SensorReading!
     SensorType sensorType; // added by Gabor to be able to determine how to parse a received SensorReading
 };
 

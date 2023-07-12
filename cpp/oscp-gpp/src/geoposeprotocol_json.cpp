@@ -128,11 +128,21 @@ void to_json(json& j, const GeolocationReading& t) {
 void from_json(const json& j, GeolocationReading& t) {
     j.at("latitude").get_to(t.latitude);
     j.at("longitude").get_to(t.longitude);
-    j.at("altitude").get_to(t.altitude);
-    j.at("accuracy").get_to(t.accuracy);
-    j.at("altitudeAccuracy").get_to(t.altitudeAccuracy);
-    j.at("heading").get_to(t.heading);
-    j.at("speed").get_to(t.speed);
+    if (j.find("altitude") != j.end()) {
+        j.at("altitude").get_to(t.altitude);
+    }
+    if (j.find("accuracy") != j.end()) {
+        j.at("accuracy").get_to(t.accuracy);
+    }
+    if (j.find("altitudeAccuracy") != j.end()) {
+        j.at("altitudeAccuracy").get_to(t.altitudeAccuracy);
+    }
+    if (j.find("heading") != j.end()) {
+        j.at("heading").get_to(t.heading);
+    }
+    if (j.find("speed") != j.end()) {
+        j.at("speed").get_to(t.speed);
+    }
 }
 
 void to_json(json& j, const WiFiReading& t) {
