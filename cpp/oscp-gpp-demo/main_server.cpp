@@ -24,6 +24,9 @@ int main(int argc, char* argv[])
 
         std::string myConfigPath = argv[1];
         std::ifstream myConfigFile(myConfigPath);
+        if (!myConfigFile.is_open()) {
+            throw std::invalid_argument("Could not open file " + myConfigPath);
+        }
         nlohmann::json myConfig = json::parse(myConfigFile);
 
 
@@ -40,7 +43,7 @@ int main(int argc, char* argv[])
 
                 // DEBUG
                 nlohmann::json requestDataJsonNoImage = requestDataJson;
-                requestDataJsonNoImage["sensorReadings"][0]["reading"]["imageBytes"] = "<IMAGE_BASE64>";
+                requestDataJsonNoImage["sensorReadings"]["cameraReadings"][0]["imageBytes"] = "<IMAGE_BASE64>";
                 std::cout << "REQUEST JSON:" << std::endl << requestDataJsonNoImage << std::endl;
 
                 // TODO:
@@ -59,6 +62,7 @@ int main(int argc, char* argv[])
 
                 oscp::GeoPoseResponse gppResponse;
                 gppResponse.id = gppRequest.id;
+                gppResponse.timestamp = gppRequest.timestamp;
                 gppResponse.geopose = myGeoPose;
 
                 nlohmann::json responseDataJson = gppResponse; // automatic conversion
