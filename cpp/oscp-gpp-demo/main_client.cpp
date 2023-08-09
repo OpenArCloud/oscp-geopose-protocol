@@ -39,10 +39,16 @@ int main(int argc, char* argv[]) {
 
         std::cout << "Camera params path: " << myCameraParamsPath << std::endl;
         std::ifstream myCameraParamsFile(myCameraParamsPath);
+        if (!myCameraParamsFile.is_open()) {
+            throw std::invalid_argument("Could not open file " + myCameraParamsPath);
+        }
         nlohmann::json myCameraParamsJson = json::parse(myCameraParamsFile);
         std::string myGeolocationParamsPath = argv[3];
         std::cout << "Geolocation params path: " << myGeolocationParamsPath << std::endl;
         std::ifstream myGeolocationParamsFile(myGeolocationParamsPath);
+        if (!myGeolocationParamsFile.is_open()) {
+            throw std::invalid_argument("Could not open file " + myGeolocationParamsPath);
+        }
         nlohmann::json myGeolocationParamsJson = json::parse(myGeolocationParamsFile);
 
         oscp::CameraModel myCameraModel = oscp::cameraModelFromString(myCameraParamsJson["camera_model"]);
@@ -56,6 +62,9 @@ int main(int argc, char* argv[]) {
 
         // Load image
         cv::Mat img = cv::imread(myImagePath, cv::IMREAD_COLOR);
+        if (img.empty()) {
+            throw std::invalid_argument("Could not open file " + myImagePath);
+        }
         // Compress to JPEG (and copy)
         std::vector<uchar> imgJPEG;
         if (!cv::imencode(".jpg", img, imgJPEG)) {
@@ -79,10 +88,6 @@ int main(int argc, char* argv[]) {
         cameraSensor.type = oscp::SensorType::CAMERA;
         cameraSensor.name = "test_client"; // test
         cameraSensor.model = toString(myCameraModel);
-        oscp::CameraParameters cameraParameters;
-        cameraParameters.model = myCameraModel;
-        cameraParameters.modelParams = myCameraModelParams;
-        cameraSensor.cameraParams = cameraParameters;
         geoPoseRequest.sensors.push_back(cameraSensor);
 
         oscp::CameraReading cameraReading;
@@ -92,30 +97,26 @@ int main(int argc, char* argv[]) {
         cameraReading.sequenceNumber = myRequestCounter;
         cameraReading.size[0] = img.cols;
         cameraReading.size[1] = img.rows;
-        oscp::SensorReading cameraSensorReading;
-        cameraSensorReading.sensorId = cameraSensor.id;
-        cameraSensorReading.timestamp = myTimestamp;
-        cameraSensorReading.sensorType = oscp::SensorType::CAMERA; // TODO: non-standard, added by Gabor
-        //cameraSensorReading.reading = cameraReading; // TODO: remove old GPPv1
-        cameraSensorReading.cameraReading = cameraReading; // TODO: introduced in GPPv2
-        geoPoseRequest.sensorReadings.push_back(cameraSensorReading);
+        cameraReading.sensorId = cameraSensor.id;
+        cameraReading.timestamp = myTimestamp;
+        oscp::CameraParameters cameraParameters;
+        cameraParameters.model = myCameraModel;
+        cameraParameters.modelParams = myCameraModelParams;
+        cameraReading.params = cameraParameters;
+        geoPoseRequest.sensorReadings.cameraReadings.push_back(cameraReading);
 
         oscp::GeolocationReading geolocationReading;
         geolocationReading.latitude = myGeolocationParamsJson["lat"];
         geolocationReading.longitude = myGeolocationParamsJson["lon"];
         geolocationReading.altitude = myGeolocationParamsJson["h"];
-        oscp::SensorReading geolocationSensorReading;
-        geolocationSensorReading.sensorType = oscp::SensorType::GEOLOCATION; // TODO: non-standard, added by Gabor
-        //geolocationSensorReading.reading = geolocationReading; // TODO: remove old GPPv1
-        geolocationSensorReading.geolocationReading = geolocationReading; // TODO: introduced in GPPv2
-        geoPoseRequest.sensorReadings.push_back(geolocationSensorReading);
+        geoPoseRequest.sensorReadings.geolocationReadings.push_back(geolocationReading);
 
         nlohmann::json requestDataJson = geoPoseRequest; // automatic conversion
         std::string requestDataString = requestDataJson.dump();
 
         // DEBUG
         nlohmann::json requestDataJsonNoImage = requestDataJson;
-        requestDataJsonNoImage["sensorReadings"][0]["reading"]["imageBytes"] = "<IMAGE_BASE64>";
+        requestDataJsonNoImage["sensorReadings"]["cameraReadings"][0]["imageBytes"] = "<IMAGE_BASE64>";
         std::cout << "REQUEST JSON:" << std::endl << requestDataJsonNoImage << std::endl;
 
         httplib::Client client("localhost", 8080);
