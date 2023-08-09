@@ -3,8 +3,9 @@
 // https://github.com/OpenArCloud/oscp-geopose-protocol
 
 // Created by Gabor Soros, Nokia Bell Labs, 2023
-// Copyright Nokia
-// MIT License
+// Copyright 2023 Nokia
+// Licensed under the MIT License
+// SPDX-License-Identifier: MIT
 
 
 //#define CPPHTTPLIB_OPENSSL_SUPPORT 1 // TODO: enable SSL here
