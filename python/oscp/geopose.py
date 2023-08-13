@@ -10,7 +10,6 @@
 # and the JavaScript implementation:
 # https://github.com/OpenArCloud/gpp-access/
 
-
 class Position(object):
     def __init__(self, lat = 0.0, lon = 0.0, h = 0.0):
         self.lat = lat
@@ -23,6 +22,10 @@ class Position(object):
             "lon:" + str(self.lon) + ',' + \
             "h:" + str(self.h) + \
         "}"
+
+    @staticmethod
+    def fromJson(jdata):
+        return Position(**jdata)
 
 class Vector3(object):
     def __init__(self, x = 0.0, y = 0.0, z = 0.0):
@@ -37,12 +40,28 @@ class Vector3(object):
             "z:" + str(self.z) + \
         "}"
 
+    @staticmethod
+    def fromJson(jdata):
+        return Vector3(**jdata)
+
 class Quaternion(object):
     def __init__(self, x = 0.0, y = 0.0, z = 0.0, w = 0.0):
         self.x = x
         self.y = y
         self.z = z
         self.w = w
+
+    def __str__(self):
+        return "{" + \
+            "x:" + str(self.x) + "," + \
+            "y:" + str(self.y) + ',' + \
+            "z:" + str(self.z) + ',' + \
+            "w:" + str(self.w) + \
+        "}"
+
+    @staticmethod
+    def fromJson(jdata):
+        return Quaternion(**jdata)
 
 class GeoPose(object):
     def __init__(self, position = Position(), quaternion = Quaternion()):
@@ -54,3 +73,7 @@ class GeoPose(object):
             "position:" + str(self.position) + "," + \
             "quaternion:" + str(self.quaternion) + \
         "}"
+
+    @staticmethod
+    def fromJson(jdata):
+        return GeoPose(position=Position.fromJson(jdata["position"]), quaternion=Quaternion.fromJson(jdata["quaternion"]))
