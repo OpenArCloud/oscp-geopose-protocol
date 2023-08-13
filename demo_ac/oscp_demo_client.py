@@ -4,7 +4,7 @@ import json
 import sys
 import uuid
 from collections import namedtuple
-from datetime import datetime
+from datetime import datetime, timezone
 
 import h3 as h3
 import piexif as piexif
@@ -90,7 +90,7 @@ class Menu:
         """
         return {
             "id": str(uuid.uuid4()),
-            "timestamp": str(datetime.now()),
+            "timestamp": datetime.now(timezone.utc).timestamp()*1000,
             "type": "geopose",
             "sensors": [
                 {
@@ -104,7 +104,7 @@ class Menu:
             ],
             "sensorReadings": [
                 {
-                    "timestamp": str(datetime.now()),
+                    "timestamp": datetime.now(timezone.utc).timestamp()*1000,
                     "sensorId": "0",
                     "reading": {
                         "sequenceNumber": 0,
@@ -117,7 +117,7 @@ class Menu:
                     }
                 },
                 {
-                    "timestamp": str(datetime.now()),
+                    "timestamp": datetime.now(timezone.utc).timestamp()*1000,
                     "sensorId": "1",
                     "reading": {
                         "latitude": float(lat),

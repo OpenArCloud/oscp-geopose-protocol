@@ -198,7 +198,7 @@ class CameraReading(object):
         self.privacy = privacy
         self.sequenceNumber = sequenceNumber
         self.imageFormat = imageFormat # TODO: string or enum?
-        self.size = size# # width, height
+        self.size = size # width, height
         self.imageBytes = imageBytes # base64 encoded image data
         self.imageOrientation = imageOrientation # [optional]
         self.params = params # [optional]
@@ -510,7 +510,7 @@ class GeoPoseAccuracy(object):
         return GeoPoseAccuracy(**jdata)
 
 class GeoPoseResponse(object):
-    def __init__(self, type:str = "geopose", id:str = str(uuid.uuid4()), timestamp = datetime.now(timezone.utc).timestamp(),
+    def __init__(self, type:str = "geopose", id:str = str(uuid.uuid4()), timestamp = datetime.now(timezone.utc).timestamp()*1000,
                 accuracy:GeoPoseAccuracy = GeoPoseAccuracy(), geopose:GeoPose = GeoPose()):
         self.type = type # ex. geopose
         self.id = id
@@ -537,7 +537,7 @@ class GeoPoseResponse(object):
         return GeoPoseResponse(type=jdata["type"], id=jdata["id"], timestamp=jdata["timestamp"], accuracy=accuracy, geopose=geopose)
 
 class GeoPoseRequest(object):
-    def __init__(self, type:str = "geopose", id:str = str(uuid.uuid4()), timestamp = datetime.now(timezone.utc).timestamp(),
+    def __init__(self, type:str = "geopose", id:str = str(uuid.uuid4()), timestamp = datetime.now(timezone.utc).timestamp()*1000,
                  sensors:[Sensor] = [], sensorReadings:SensorReadings = SensorReadings(), priorPoses:[GeoPoseResponse] = []):
         self.type = type # ex. geopose
         self.id = id
