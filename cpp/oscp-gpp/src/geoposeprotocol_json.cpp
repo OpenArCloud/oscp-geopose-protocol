@@ -57,7 +57,7 @@ void to_json(json& j, const CameraParameters& t) {
 
 void from_json(const json& j, CameraParameters& t) {
     if (j.find("model") != j.end()) {
-        j.at("model").get_to(t.model);
+        t.model = cameraModelFromString(j.at("model"));
     }
     if (j.find("modelParams") != j.end()) {
         j.at("modelParams").get_to(t.modelParams);
@@ -105,7 +105,7 @@ void from_json(const json& j, CameraReading& t) {
     j.at("sensorId").get_to(t.sensorId);
     j.at("privacy").get_to(t.privacy);
     j.at("sequenceNumber").get_to(t.sequenceNumber);
-    j.at("imageFormat").get_to(t.imageFormat);
+    t.imageFormat = imageFormatFromString(j.at("imageFormat"));
     j.at("size").get_to(t.size);
     j.at("imageBytes").get_to(t.imageBytes);
     if (j.find("imageOrientation") != j.end()) {
@@ -279,7 +279,7 @@ void to_json(json& j, const Sensor& t) {
 }
 
 void from_json(const json& j, Sensor& t) {
-    j.at("type").get_to(t.type);
+    t.type = sensorTypefromString(j.at("type"));
     j.at("id").get_to(t.id);
     if (j.find("name") != j.end()) {
         j.at("name").get_to(t.name);
