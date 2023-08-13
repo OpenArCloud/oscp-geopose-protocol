@@ -10,11 +10,11 @@
 # and the JavaScript implementation:
 # https://github.com/OpenArCloud/gpp-access/
 
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 import uuid
 import json
-from geopose import *
+from oscp.geopose import *
 import sys
 
 '''
@@ -32,6 +32,27 @@ class SensorType(str, Enum):
     UNKNOWN = 'unknown'
     # TODO: add altitude sensor
 
+    @staticmethod
+    def fromJson(jdata):
+        if jdata in ('CAMERA', 'camera'):
+            return SensorType.CAMERA
+        elif jdata in ('GEOLOCATION', 'geolocation'):
+            return SensorType.GEOLOCATION
+        elif jdata in ('WIFI', 'wifi'):
+            return SensorType.WIFI
+        elif jdata in ('BLUETOOTH', 'bluetooth'):
+            return SensorType.BLUETOOTH
+        elif jdata in ('ACCELEROMETER', 'accelerometer'):
+            return SensorType.ACCELEROMETER
+        elif jdata in ('GYROSCOPE', 'gyroscope'):
+            return SensorType.GYROSCOPE
+        elif jdata in ('MAGNETOMETER', 'magnetometer'):
+            return SensorType.MAGNETOMETER
+        elif jdata in ('UNKNOWN', 'unknown'):
+            return SensorType.UNKNOWN
+        else:
+            raise NotImplementedError
+
 '''
 Image formats usable with the CameraReading object
 Use when creating a SensorReading object for a new Sensor of type 'camera'.
@@ -43,6 +64,21 @@ class ImageFormat(str, Enum):
     JPG = 'JPG'
     UNKNOWN = 'unknown'
 
+    @staticmethod
+    def fromJson(jdata):
+        if jdata in ('RGBA32', 'rgba32'):
+            return ImageFormat.RGBA32
+        elif jdata in ('GRAY8', 'gray8'):
+            return ImageFormat.GRAY8
+        elif jdata in ('DEPTH', 'depth'):
+            return ImageFormat.DEPTH
+        elif jdata in ('JPG', 'jpg'):
+            return ImageFormat.JPG
+        elif jdata in ('UNKNOWN', 'unknown'):
+            return ImageFormat.UNKNOWN
+        else:
+            raise NotImplementedError
+
 class ImageOrientation(object):
     def __init__(self, mirrored = False, rotation = 0.0):
         self.mirrored = mirrored
@@ -53,6 +89,10 @@ class ImageOrientation(object):
             "mirrored:" + str(self.mirrored) + "," + \
             "rotation:" + str(self.rotation) + \
         "}"
+
+    @staticmethod
+    def fromJson(jdata):
+        return ImageOrientation(**jdata)
 
 # The camera models of Colmap are used here
 # See https://colmap.github.io/cameras.html
@@ -70,6 +110,35 @@ class CameraModel(str, Enum):
     THIN_PRISM_FISHEYE = 'THIN_PRISM_FISHEYE' # fx, fy, cx, cy, k1, k2, p1, p2, k3, k4, sx1, sy1
     UNKNOWN = 'UNKNOWN'
 
+    @staticmethod
+    def fromJson(jdata):
+        if jdata in ('SIMPLE_PINHOLE', 'simple_pinhole'):
+            return CameraModel.SIMPLE_PINHOLE
+        elif jdata in ('PINHOLE', 'pinhole'):
+            return CameraModel.PINHOLE
+        elif jdata in ('SIMPLE_RADIAL', 'simple_radial'):
+            return CameraModel.SIMPLE_RADIAL
+        elif jdata in ('RADIAL', 'radial'):
+            return CameraModel.RADIAL
+        elif jdata in ('OPENCV', 'opencv'):
+            return CameraModel.OPENCV
+        elif jdata in ('OPENCV_FISHEYE', 'opencv_fisheye'):
+            return CameraModel.OPENCV_FISHEYE
+        elif jdata in ('FULL_OPENCV', 'full_opencv'):
+            return CameraModel.FULL_OPENCV
+        elif jdata in ('FOV', 'fov'):
+            return CameraModel.FOV
+        elif jdata in ('SIMPLE_RADIAL_FISHEYE', 'simple_radial_fisheye'):
+            return CameraModel.SIMPLE_RADIAL_FISHEYE
+        elif jdata in ('RADIAL_FISHEYE', 'radial_fisheye'):
+            return CameraModel.RADIAL_FISHEYE
+        elif jdata in ('THIN_PRISM_FISHEYE', 'thin_prism_fisheye'):
+            return CameraModel.THIN_PRISM_FISHEYE
+        elif jdata in ('UNKNOWN', 'unknown'):
+            return CameraModel.UNKNOWN
+        else:
+            raise NotImplementedError
+
 class CameraParameters(object):
     def __init__(self, model = CameraModel.UNKNOWN, modelParams = [], minMaxDepth = [], minMaxDisparity = []):
         self.model = model # [optional] // TODO: string in the v1 standard, but enum is better suited here
@@ -84,6 +153,19 @@ class CameraParameters(object):
             "minMaxDepth:" + str(self.minMaxDepth) + "," + \
             "minMaxDisparity:" + str(self.minMaxDisparity) + \
         "}"
+
+    @staticmethod
+    def fromJson(jdata):
+        cameraParameters = CameraParameters()
+        if "model" in jdata:
+            cameraParameters.model = CameraModel.fromJson(jdata["model"])
+        if "modelParams" in jdata:
+            cameraParameters.modelParams = jdata["modelParams"]
+        if "minMaxDepth" in jdata:
+            cameraParameters.minMaxDepth = jdata["minMaxDepth"]
+        if "minMaxDisparity" in jdata:
+            cameraParameters.minMaxDisparity = jdata["minMaxDisparity"]
+        return cameraParameters
 
 class Privacy(object):
     def __init__(self, dataRetention = [], dataAcceptableUse = [], dataSanitizationApplied = [], dataSanitizationRequested = []):
@@ -100,6 +182,13 @@ class Privacy(object):
             "dataSanitizationRequested:" + str(self.dataSanitizationRequested) + \
         "}"
 
+    @staticmethod
+    def fromJson(jdata):
+        return Privacy(dataRetention=jdata["dataRetention"],
+                       dataAcceptableUse=jdata["dataAcceptableUse"],
+                       dataSanitizationApplied=jdata["dataSanitizationApplied"],
+                       dataSanitizationRequested=jdata["dataSanitizationRequested"])
+
 class CameraReading(object):
     def __init__(self, timestamp = 0, sensorId = "", privacy = Privacy(),
                 sequenceNumber = 0, imageFormat = ImageFormat.UNKNOWN, size = [0,0], imageBytes = [],
@@ -112,7 +201,7 @@ class CameraReading(object):
         self.size = size# # width, height
         self.imageBytes = imageBytes # base64 encoded image data
         self.imageOrientation = imageOrientation # [optional]
-        self.params = params
+        self.params = params # [optional]
 
     def __str__(self):
         return "{" + \
@@ -126,6 +215,24 @@ class CameraReading(object):
             "imageOrientation:" + str(self.imageOrientation) + "," + \
             "params:" + str(self.params) + \
         "}"
+
+    @staticmethod
+    def fromJson(jdata):
+        if "imageOrientation" in jdata:
+            imageOrientation = ImageOrientation.fromJson(jdata["imageOrientation"])
+        else:
+            imageOrientation = ImageOrientation()
+        if "params" in jdata:
+            params = CameraParameters.fromJson(jdata["params"])
+        else:
+            params = CameraParameters()
+        return CameraReading(timestamp=jdata["timestamp"], sensorId=jdata["sensorId"],
+                             privacy=Privacy.fromJson(jdata["privacy"]),
+                             sequenceNumber=jdata["sequenceNumber"],
+                             imageFormat=ImageFormat.fromJson(jdata["imageFormat"]),
+                             size=jdata["size"], imageBytes=jdata["imageBytes"],
+                             imageOrientation=imageOrientation,
+                             params=params)
 
 class GeolocationReading(object):
     # aligns with https://w3c.github.io/geolocation-sensor/
@@ -141,6 +248,28 @@ class GeolocationReading(object):
         self.altitudeAccuracy = altitudeAccuracy
         self.heading = heading
         self.speed = speed
+
+    def __str__(self):
+        return "{" + \
+            "timestamp:" + str(self.timestamp) + "," + \
+            "sensorId:" + str(self.sensorId) + "," + \
+            "privacy:" + str(self.privacy) + "," + \
+            "latitude:" + str(self.latitude) + "," + \
+            "longitude:" + str(self.longitude) + "," + \
+            "altitude:" + str(self.altitude) + "," + \
+            "accuracy:" + str(self.accuracy) + "," + \
+            "altitudeAccuracy:" + str(self.altitudeAccuracy) + "," + \
+            "heading:" + str(self.heading) + "," + \
+            "speed:" + str(self.speed) + \
+        "}"
+
+    @staticmethod
+    def fromJson(jdata):
+        return GeolocationReading(timestamp=jdata["timestamp"], sensorId=jdata["sensorId"],
+                                  privacy=Privacy.fromJson(jdata["privacy"]),
+                                  latitude=jdata["latitude"], longitude=jdata["longitude"], altitude=jdata["altitude"],
+                                  accuracy=jdata["accuracy"], altitudeAccuracy=jdata["altitudeAccuracy"],
+                                  heading=jdata["heading"], speed=jdata["speed"])
 
 class WiFiReading(object):
     def __init__(self, timestamp = 0, sensorId = "", privacy = Privacy(),
@@ -168,6 +297,13 @@ class WiFiReading(object):
             "scanTimeEnd:" + str(self.scanTimeEnd) + \
         "}"
 
+    @staticmethod
+    def fromJson(jdata):
+        return WiFiReading(timestamp=jdata["timestamp"], sensorId=jdata["sensorId"],
+                           privacy=Privacy.fromJson(jdata["privacy"]),
+                           BSSID=jdata["BSSID"], frequency=jdata["frequency"], RSSI=jdata["RSSI"],
+                           SSID=jdata["SSID"], scanTimeStart=jdata["scanTimeStart"], scanTimeEnd=jdata["scanTimeEnd"])
+
 class BluetoothReading(object):
     def __init__(self, timestamp = 0, sensorId = "", privacy = Privacy(),
                  address = "", RSSI = 0.0, name = ""):
@@ -188,6 +324,11 @@ class BluetoothReading(object):
             "name:" + str(self.name) + \
         "}"
 
+    @staticmethod
+    def fromJson(jdata):
+        return BluetoothReading(timestamp=jdata["timestamp"], sensorId=jdata["sensorId"],
+                                privacy=Privacy.fromJson(jdata["privacy"]),
+                                address=jdata["address"], RSSI=jdata["RSSI"], name=jdata["name"])
 class AccelerometerReading(object):
     def __init__(self, timestamp = 0, sensorId = "", privacy = Privacy(),
                  x = 0.0, y = 0.0, z = 0.0):
@@ -207,6 +348,12 @@ class AccelerometerReading(object):
             "y:" + str(self.y) + ',' + \
             "z:" + str(self.z) + \
         "}"
+
+    @staticmethod
+    def fromJson(jdata):
+        return AccelerometerReading(timestamp=jdata["timestamp"], sensorId=jdata["sensorId"],
+                                    privacy=Privacy.fromJson(jdata["privacy"]),
+                                    x=jdata["x"], y=jdata["y"], z=jdata["z"])
 
 class GyroscopeReading(object):
     def __init__(self, timestamp = 0, sensorId = "", privacy = Privacy(),
@@ -228,6 +375,12 @@ class GyroscopeReading(object):
             "z:" + str(self.z) + \
         "}"
 
+    @staticmethod
+    def fromJson(jdata):
+        return GyroscopeReading(timestamp=jdata["timestamp"], sensorId=jdata["sensorId"],
+                                privacy=Privacy.fromJson(jdata["privacy"]),
+                                x=jdata["x"], y=jdata["y"], z=jdata["z"])
+
 class MagnetometerReading(object):
     def __init__(self, timestamp = 0, sensorId = "", privacy = Privacy(),
                  x = 0.0, y = 0.0, z = 0.0):
@@ -248,8 +401,14 @@ class MagnetometerReading(object):
             "z:" + str(self.z) + \
         "}"
 
+    @staticmethod
+    def fromJson(jdata):
+        return MagnetometerReading(timestamp=jdata["timestamp"], sensorId=jdata["sensorId"],
+                                   privacy=Privacy.fromJson(jdata["privacy"]),
+                                   x=jdata["x"], y=jdata["y"], z=jdata["z"])
+
 class Sensor(object):
-    def __init__(self, type = SensorType.UNKNOWN, id = "", name = "", model = "",
+    def __init__(self, type:SensorType = SensorType.UNKNOWN, id:str = "", name:str = "", model:str = "",
                  rigIdentifier = "", rigRotation = Quaternion(), rigTranslation = Vector3()):
         self.type = type # camera, geolocation, wifi, bluetooth, accelerometer, gyroscope, magnetometer
         self.id = id
@@ -270,28 +429,70 @@ class Sensor(object):
             "rigTranslation:" + str(self.rigTranslation) + \
         "}"
 
+    @staticmethod
+    def fromJson(jdata):
+        sensor = Sensor(type=SensorType.fromJson(jdata["type"]), id=jdata["id"])
+        if "name" in jdata:
+            sensor.name=jdata["name"],
+        if "model" in jdata:
+            sensor.model=jdata["model"]
+        if "rigIdentifier" in jdata:
+            sensor.rigIdentifier=jdata["rigIdentifier"]
+        if "rigRotation" in jdata:
+            sensor.rigRotation = Quaternion.fromJson(jdata["rigRotation"])
+        if "rigTranslation" in jdata:
+            sensor.rigTranslation = Vector3.fromJson(jdata["rigTranslation"])
+        return sensor
 
 class SensorReadings(object):
-    def __init__(self, cameraReadings = [], geolocationReadings = [], accelerometerReading = [], gyroscopeReadings = [],
-                    magnetometerReadings = [], wifiReadings = [], bluetoothReadings = []):
-        self.cameraReadings = cameraReadings
-        self.geolocationReadings = geolocationReadings
-        self.accelerometerReading = accelerometerReading
-        self.gyroscopeReadings = gyroscopeReadings
-        self.magnetometerReadings = magnetometerReadings
-        self.wifiReadings = wifiReadings
-        self.bluetoothReadings = bluetoothReadings
+    def __init__(self, cameraReadings:[CameraReading] = [], geolocationReadings:[GeolocationReading] = [],
+                 accelerometerReadings:[AccelerometerReading] = [], gyroscopeReadings:[GyroscopeReading] = [],
+                 magnetometerReadings:[MagnetometerReading] = [], wifiReadings:[WiFiReading] = [],
+                 bluetoothReadings:[BluetoothReading] = []):
+        self.cameraReadings = cameraReadings # [optional]
+        self.geolocationReadings = geolocationReadings # [optional]
+        self.accelerometerReadings = accelerometerReadings # [optional]
+        self.gyroscopeReadings = gyroscopeReadings # [optional]
+        self.magnetometerReadings = magnetometerReadings # [optional]
+        self.wifiReadings = wifiReadings # [optional]
+        self.bluetoothReadings = bluetoothReadings # [optional]
 
     def __str__(self):
         return "{" + \
             "cameraReadings:" + str(self.cameraReadings) + "," + \
             "geolocationReadings:" + str(self.geolocationReadings) + "," + \
-            "accelerometerReading:" + str(self.accelerometerReading) + "," + \
+            "accelerometerReadings:" + str(self.accelerometerReadings) + "," + \
             "gyroscopeReadings:" + str(self.gyroscopeReadings) + "," + \
             "magnetometerReadings:" + str(self.magnetometerReadings) + ',' + \
             "wifiReadings:" + str(self.wifiReadings) + ',' + \
             "bluetoothReadings:" + str(self.bluetoothReadings) + \
         "}"
+
+    @staticmethod
+    def fromJson(jdata):
+        sensorReadings = SensorReadings()
+        if "cameraReadings" in jdata:
+            for jcameraReading in jdata["cameraReadings"]:
+                sensorReadings.cameraReadings.append(CameraReading.fromJson(jcameraReading))
+        if "geolocationReadings" in jdata:
+            for jgeolocationReading in jdata["geolocationReadings"]:
+                sensorReadings.geolocationReadings.append(GeolocationReading.fromJson(jgeolocationReading))
+        if "accelerometerReadings" in jdata:
+            for jaccelerometerReading in jdata["accelerometerReadings"]:
+                sensorReadings.accelerometerReadings.append(AccelerometerReading.fromJson(jaccelerometerReading))
+        if "gyroscopeReadings" in jdata:
+            for jgyroscopeReading in jdata["gyroscopeReadings"]:
+                sensorReadings.gyroscopeReadings.append(GyroscopeReading.fromJson(jgyroscopeReading))
+        if "magnetometerReadings" in jdata:
+            for jmagnetormeterReading in jdata["magnetometerReadings"]:
+                sensorReadings.magnetometerReadings.append(MagnetometerReading.fromJson(jmagnetormeterReading))
+        if "wifiReadings" in jdata:
+            for jwifiReading in jdata["wifiReadings"]:
+                sensorReadings.wifiReadings.append(WiFiReading.fromJson(jwifiReading))
+        if "bluetoothReadings" in jdata:
+            for jbluetoothReading in jdata["bluetoothReadings"]:
+                sensorReadings.bluetoothReadings.append(BluetoothReading.fromJson(jbluetoothReading))
+        return sensorReadings
 
 class GeoPoseAccuracy(object):
     def __init__(self, position = sys.float_info.max, orientation = sys.float_info.max):
@@ -300,14 +501,17 @@ class GeoPoseAccuracy(object):
 
     def __str__(self):
         return "{" + \
-            "y:" + str(self.y) + ',' + \
-            "z:" + str(self.z) + \
+            "position:" + str(self.position) + ',' + \
+            "orientation:" + str(self.orientation) + \
         "}"
 
-# TODO: add protocol version number in request and response
+    @staticmethod
+    def fromJson(jdata):
+        return GeoPoseAccuracy(**jdata)
+
 class GeoPoseResponse(object):
-    def __init__(self, type = "geopose", id = str(uuid.uuid4()), timestamp = str(datetime.now(datetime.timezone.utc)),
-                accuracy = GeoPoseAccuracy(), geopose = GeoPose()):
+    def __init__(self, type:str = "geopose", id:str = str(uuid.uuid4()), timestamp = datetime.now(timezone.utc).timestamp(),
+                accuracy:GeoPoseAccuracy = GeoPoseAccuracy(), geopose:GeoPose = GeoPose()):
         self.type = type # ex. geopose
         self.id = id
         self.timestamp = timestamp # The number of milliseconds since the Unix Epoch.
@@ -323,15 +527,24 @@ class GeoPoseResponse(object):
             "geopose:" + str(self.geopose) + \
         "}"
 
+    def toJson(self):
+        return json.dumps(self, default=lambda o: o.__dict__)
+
+    @staticmethod
+    def fromJson(jdata):
+        accuracy = GeoPoseAccuracy.fromJson(jdata["accuracy"])
+        geopose = GeoPose.fromJson(jdata["geopose"])
+        return GeoPoseResponse(type=jdata["type"], id=jdata["id"], timestamp=jdata["timestamp"], accuracy=accuracy, geopose=geopose)
+
 class GeoPoseRequest(object):
-    def __init__(self, type = "geopose", id = str(uuid.uuid4()), timestamp = str(datetime.now(datetime.timezone.utc)),
-                 sensors = [], sensorReadings = SensorReadings(), priorPoses = []):
+    def __init__(self, type:str = "geopose", id:str = str(uuid.uuid4()), timestamp = datetime.now(timezone.utc).timestamp(),
+                 sensors:[Sensor] = [], sensorReadings:SensorReadings = SensorReadings(), priorPoses:[GeoPoseResponse] = []):
         self.type = type # ex. geopose
         self.id = id
         self.timestamp = timestamp # The number of milliseconds since the Unix Epoch.
         self.sensors = sensors
         self.sensorReadings = sensorReadings
-        self.priorPoses = priorPoses # TODO: are these of type GeoPose or GeoPoseResponse?
+        self.priorPoses = priorPoses # [optional] # TODO: are these of type GeoPose or GeoPoseResponse?
 
     def __str__(self):
         return "{" + \
@@ -342,3 +555,23 @@ class GeoPoseRequest(object):
             "sensorReadings:" + str(self.sensorReadings) + ',' + \
             "priorPoses:" + str(self.priorPoses) + \
         "}"
+
+    def toJson(self):
+        return json.dumps(self, default=lambda o: o.__dict__)
+
+    @staticmethod
+    def fromJson(jdata):
+        sensors = []
+        for jsensor in jdata["sensors"]:
+            sensors.append(Sensor.fromJson(jsensor))
+        sensorReadings = SensorReadings.fromJson(jdata["sensorReadings"])
+        priorPoses = []
+        if "priorPoses" in jdata:
+            for jpriorPose in jdata["priorPoses"]:
+                priorPoses.append(GeoPoseResponse.fromJson(jpriorPose))
+        else:
+            priorPoses = []
+        return GeoPoseRequest(type=jdata["type"], id=jdata["id"], timestamp=jdata["timestamp"],
+                              sensors=sensors, sensorReadings=sensorReadings, priorPoses=priorPoses)
+
+# TODO: add protocol version number in request and response
