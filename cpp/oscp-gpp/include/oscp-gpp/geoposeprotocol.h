@@ -5,8 +5,9 @@
 // https://github.com/OpenArCloud/gpp-access/
 
 // Created by Gabor Soros, Nokia Bell Labs, 2022
-// Copyright Nokia
-// MIT License
+// Copyright 2023 Nokia
+// Licensed under the MIT License
+// SPDX-License-Identifier: MIT
 
 
 #ifndef _OSCP_GEOPOSE_PROTOCOL_H_
@@ -245,25 +246,11 @@ struct Vector3 {
     float z = 0.0f;
 };
 
-struct AbstractSensorParameters {
-//class AbstractSensorParameters {
-//protected:
-//    SensorType _sensorType = SensorType::UNKNOWN;
-//public:
-//    SensorType getSensorType() const {
-//        return _sensorType;
-//    }
-};
-
-struct CameraParameters : AbstractSensorParameters {
+struct CameraParameters {
     enum CameraModel model = CameraModel::UNKNOWN; // [optional] // TODO: std::string in the v1 standard, but enum is better suited here
     std::vector<float> modelParams; // [optional]
     std::vector<float> minMaxDepth; // [optional] // for depth image
     std::vector<float> minMaxDisparity; // [optional] // for disparity image
-
-    //CameraParameters() {
-    //    _sensorType = SensorType::CAMERA;
-    //}
 };
 
 struct Privacy {
@@ -273,18 +260,27 @@ struct Privacy {
     std::vector<std::string> dataSanitizationRequested; //server-side data sanitization requested
 };
 
-struct AbstractSensorReading {
-//class AbstractSensorReading {
-//protected:
-//    SensorType _sensorType = SensorType::UNKNOWN;
+struct BaseSensorReading {
+    std::time_t timestamp; // The number of milliseconds since the Unix Epoch.
+    std::string sensorId;
+    struct Privacy privacy = Privacy();
+
+    //SensorType _sensorType = SensorType::UNKNOWN;
+    // added by Gabor to be able to determine how to parse a received SensorReading
+    // Currently an AccelerometerReading, a GyroscopeReading, and a MagnetometerReading would look exactly the same!
+    // We could find out the sensorType via Sensors[sensorId] but there is no guarantee that the Sensors were parsed already and stored anywhere.
 };
 
-struct CameraReading : public AbstractSensorReading {
+struct CameraReading : public BaseSensorReading {
     size_t sequenceNumber = 0;
     enum ImageFormat imageFormat = ImageFormat::UNKNOWN; // TODO: string
     size_t size[2] = {0,0}; // width, height
     std::string imageBytes; // base64 encoded image data
-    struct ImageOrientation imageOrientation; // [optional]
+    struct ImageOrientation imageOrientation = ImageOrientation(); // [optional]
+
+    CameraParameters params;
+    // Note: as the intrinsics can change over time, it is better to store the cameraParams in the CameraReading per frame
+    // and not in the Sensor description once. This change was implemented from GPPv1 to GPPv2
 
     //CameraReading() {
     //    _sensorType = SensorType::CAMERA;
@@ -292,7 +288,7 @@ struct CameraReading : public AbstractSensorReading {
 };
 
 //aligns with https://w3c.github.io/geolocation-sensor/
-struct GeolocationReading : AbstractSensorReading {
+struct GeolocationReading : BaseSensorReading {
     float latitude = 0.0f;
     float longitude = 0.0f;
     float altitude = 0.0f;
@@ -302,7 +298,7 @@ struct GeolocationReading : AbstractSensorReading {
     float speed = 0.0f;
 };
 
-struct WiFiReading : AbstractSensorReading {
+struct WiFiReading : BaseSensorReading {
     std::string BSSID;
     float frequency = 0.0f; // TODO: shouldn't this be a band frequency range?
     float RSSI = 0.0f; // TODO: shouldn't this be a vector?
@@ -311,25 +307,25 @@ struct WiFiReading : AbstractSensorReading {
     std::time_t scanTimeEnd;  // The number of milliseconds since the Unix Epoch.
 };
 
-struct BluetoothReading : AbstractSensorReading {
+struct BluetoothReading : BaseSensorReading {
     std::string address;
     float RSSI = 0.0f; // TODO: shouldn't this be a vector?
     std::string name;
 };
 
-struct AccelerometerReading : AbstractSensorReading {
+struct AccelerometerReading : BaseSensorReading {
     float x = 0.0f;
     float y = 0.0f;
     float z = 0.0f;
 };
 
-struct GyroscopeReading : AbstractSensorReading {
+struct GyroscopeReading : BaseSensorReading {
     float x = 0.0f;
     float y = 0.0f;
     float z = 0.0f;
 };
 
-struct MagnetometerReading : AbstractSensorReading {
+struct MagnetometerReading : BaseSensorReading {
     float x = 0.0f;
     float y = 0.0f;
     float z = 0.0f;
@@ -339,62 +335,20 @@ struct Sensor {
     SensorType type = SensorType::UNKNOWN; //std::string type; // camera, geolocation, wifi, bluetooth, accelerometer, gyroscope, magnetometer
     std::string id;
     std::string name; // [optional]
-    std::string model; // [optional] // TODO: is this CameraModel or other mode? If CameraModel, it is redundant here and should be inside params only.
+    std::string model; // [optional] // TODO: is this CameraModel or other model? If CameraModel, it is redundant here and should be inside params only.
     std::string rigIdentifier; // [optional]
     struct Quaternion rigRotation; // [optional] // rotation quaternion from rig to sensor
     struct Vector3 rigTranslation; // [optional] //  translation vector from rig to sensor
-    // TODO: not yet clear how to store the params member to be able to store various types of SensorParameters
-    // 1.
-    //struct AbstractSensorParameters params; // [optional]
-    // 2.
-    //union {
-    //    CameraParameters cameraParams;
-    //    OtherSensorParameters otherSensorParameters;
-    //};
-    // 3.
-    CameraParameters cameraParams;
-    // TODO: because the intrinsics can change over time, it would be better to store the cameraParams in the CameraReading per frame
-    // and then we would not have this problem of storing multiple types in the same field
 };
 
-struct SensorReading {
-    std::time_t timestamp;  // The number of milliseconds since the Unix Epoch.
-    std::string sensorId;
-    struct Privacy privacy;
-
-    // TODO: reading should not be optional because it makes no sense to send a SensorReading without the real values.
-    // TODO: we should store the sensorType otherwise the receiver cannot parse it.
-    // Currently an AccelerometerReading, a GyroscopeReading, and a MagnetometerReading would look exactly the same!
-    // We could find out the sensorType via Sensors[sensorId] but there is no guarantee that the Sensors were parsed already and stored anywhere.
-
-    // TODO: not yet clear how to store the reading member to be able to store various SensorReadings
-    // 1. store abstract class pointer and cast (but currently we do not store the SensorType, so cannot decide how to parse a received SensorReading)
-    //struct AbstractSensorReading reading; // [optional] // (CameraReading | GeolocationReading | WiFiReading | BluetoothReading | AccelerometerReading | GyroscopeReading | MagnetometerReading);
-    // (This was implemented first for GPP v1)
-    //
-    // 2. store as union (does not work yet)
-    //union {
-    //    CameraReading cameraReading;
-    //    GeolocationReading geolocationReading;
-    //    WiFiReading wifiReading;
-    //    BluetoothReading bluetoothReading;
-    //    AccelerometerReading accelerometerReading;
-    //    GyroscopeReading gyroscopeReading;
-    //    MagnetometerReading magnetometerReading;
-    //};
-    //
-    // 3. store all types separately (wasteful)
-    // (This was decided for GPP v2)
-    CameraReading cameraReading;
-    AccelerometerReading accelerometerReading;
-    GeolocationReading geolocationReading;
-    WiFiReading wifiReading;
-    BluetoothReading bluetoothReading;
-    GyroscopeReading gyroscopeReading;
-    MagnetometerReading magnetometerReading;
-
-    // TODO: we must add the sensorType here, otherwise we cannot decide how to parse this SensorReading!
-    SensorType sensorType; // added by Gabor to be able to determine how to parse a received SensorReading
+struct SensorReadings {
+    std::vector<CameraReading> cameraReadings;
+    std::vector<AccelerometerReading> accelerometerReadings;
+    std::vector<GeolocationReading> geolocationReadings;
+    std::vector<WiFiReading> wifiReadings;
+    std::vector<BluetoothReading> bluetoothReadings;
+    std::vector<GyroscopeReading> gyroscopeReadings;
+    std::vector<MagnetometerReading> magnetometerReadings;
 };
 
 struct GeoPoseAccuracy {
@@ -405,11 +359,7 @@ struct GeoPoseAccuracy {
 struct GeoPoseResponse {
     std::string type = "geopose"; //ex. geopose
     std::string id; // UUID
-    // TODO: uint64_t timestamp;? // The number of milliseconds since the Unix Epoch.
-    std::time_t timestamp;
-    // TODO: inconsistent specification at https://github.com/OpenArCloud/oscp-geopose-protocol
-    // It is unclear whether accuracy is a single float or a struct of two floats
-    //float accuracy;
+    std::time_t timestamp; // TODO: uint64_t timestamp;? // The number of milliseconds since the Unix Epoch.
     struct GeoPoseAccuracy accuracy;
     struct GeoPose geopose;
 };
@@ -417,11 +367,9 @@ struct GeoPoseResponse {
 struct GeoPoseRequest {
     std::string type = "geopose"; //ex. geopose
     std::string id; // UUID
-    // TODO: uint64_t? timestamp;? // The number of milliseconds since the Unix Epoch.
-    std::time_t timestamp;
-
+    std::time_t timestamp; // TODO: uint64_t? timestamp;? // The number of milliseconds since the Unix Epoch.
     std::vector<Sensor> sensors;
-    std::vector<SensorReading> sensorReadings;
+    SensorReadings sensorReadings;
     std::vector<GeoPoseResponse> priorPoses; // [optional] // previous geoposes // TODO: are these of type GeoPose or GeoPoseResponse?
 };
 

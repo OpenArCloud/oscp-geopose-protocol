@@ -3,8 +3,9 @@
 // https://github.com/OpenArCloud/oscp-geopose-protocol
 
 // Created by Gabor Soros, Nokia Bell Labs, 2022
-// Copyright Nokia
-// MIT License
+// Copyright 2023 Nokia
+// Licensed under the MIT License
+// SPDX-License-Identifier: MIT
 
 
 #ifndef _OSCP_GEOPOSE_PROTOCOL_JSON_H_
@@ -59,8 +60,6 @@ void to_json(json& j, const CameraParameters& t);
 void from_json(const json& j, CameraParameters& t);
 void to_json(json& j, const Privacy& t);
 void from_json(const json& j, Privacy& t);
-void to_json(json& j, const AbstractSensorReading& t);
-void from_json(const json& j, AbstractSensorReading& t);
 void to_json(json& j, const CameraReading& t);
 void from_json(const json& j, CameraReading& t);
 void to_json(json& j, const GeolocationReading& t);
@@ -75,12 +74,10 @@ void to_json(json& j, const GyroscopeReading& t);
 void from_json(const json& j, GyroscopeReading& t);
 void to_json(json& j, const MagnetometerReading& t);
 void from_json(const json& j, MagnetometerReading& t);
-void to_json(json& j, const AbstractSensorParameters& t);
-void from_json(const json& j, AbstractSensorParameters& t);
 void to_json(json& j, const Sensor& t);
 void from_json(const json& j, Sensor& t);
-void to_json(json& j, const SensorReading& t);
-void from_json(const json& j, SensorReading& t);
+void to_json(json& j, const SensorReadings& t);
+void from_json(const json& j, SensorReadings& t);
 void to_json(json& j, const GeoPoseAccuracy& t);
 void from_json(const json& j, GeoPoseAccuracy& t);
 void to_json(json& j, const GeoPoseResponse& t);

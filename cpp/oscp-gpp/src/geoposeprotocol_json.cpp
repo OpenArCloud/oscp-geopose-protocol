@@ -3,8 +3,9 @@
 // https://github.com/OpenArCloud/oscp-geopose-protocol
 
 // Created by Gabor Soros, Nokia Bell Labs, 2022
-// Copyright Nokia
-// MIT License
+// Copyright 2023 Nokia
+// Licensed under the MIT License
+// SPDX-License-Identifier: MIT
 
 
 #include <oscp-gpp/geoposeprotocol_json.h>
@@ -56,7 +57,7 @@ void to_json(json& j, const CameraParameters& t) {
 
 void from_json(const json& j, CameraParameters& t) {
     if (j.find("model") != j.end()) {
-        j.at("model").get_to(t.model);
+        t.model = cameraModelFromString(j.at("model"));
     }
     if (j.find("modelParams") != j.end()) {
         j.at("modelParams").get_to(t.modelParams);
@@ -85,36 +86,41 @@ void from_json(const json& j, Privacy& t) {
     j.at("dataSanitizationRequested").get_to(t.dataSanitizationRequested);
 }
 
-void to_json(json& j, const AbstractSensorReading& t) {
-    j = json{};
-}
-
-void from_json(const json& j, AbstractSensorReading& t) {
-}
-
-
 void to_json(json& j, const CameraReading& t) {
     j = json{
+        {"timestamp", t.timestamp},
+        {"sensorId", t.sensorId},
+        {"privacy", t.privacy},
         {"sequenceNumber", t.sequenceNumber},
         {"imageFormat", t.imageFormat},
         {"size", t.size},
         {"imageBytes", t.imageBytes},
-        {"imageOrientation", t.imageOrientation}
+        {"imageOrientation", t.imageOrientation},
+        {"params", t.params},
     };
 }
 
 void from_json(const json& j, CameraReading& t) {
+    j.at("timestamp").get_to(t.timestamp);
+    j.at("sensorId").get_to(t.sensorId);
+    j.at("privacy").get_to(t.privacy);
     j.at("sequenceNumber").get_to(t.sequenceNumber);
-    j.at("imageFormat").get_to(t.imageFormat);
+    t.imageFormat = imageFormatFromString(j.at("imageFormat"));
     j.at("size").get_to(t.size);
     j.at("imageBytes").get_to(t.imageBytes);
     if (j.find("imageOrientation") != j.end()) {
         j.at("imageOrientation").get_to(t.imageOrientation);
     }
+    if (j.find("params") != j.end()) {
+        j.at("params").get_to(t.params);
+    }
 }
 
 void to_json(json& j, const GeolocationReading& t) {
     j = json{
+        {"timestamp", t.timestamp},
+        {"sensorId", t.sensorId},
+        {"privacy", t.privacy},
         {"latitude", t.latitude},
         {"longitude", t.longitude},
         {"altitude", t.altitude},
@@ -126,6 +132,9 @@ void to_json(json& j, const GeolocationReading& t) {
 }
 
 void from_json(const json& j, GeolocationReading& t) {
+    j.at("timestamp").get_to(t.timestamp);
+    j.at("sensorId").get_to(t.sensorId);
+    j.at("privacy").get_to(t.privacy);
     j.at("latitude").get_to(t.latitude);
     j.at("longitude").get_to(t.longitude);
     if (j.find("altitude") != j.end()) {
@@ -147,6 +156,9 @@ void from_json(const json& j, GeolocationReading& t) {
 
 void to_json(json& j, const WiFiReading& t) {
     j = json{
+        {"timestamp", t.timestamp},
+        {"sensorId", t.sensorId},
+        {"privacy", t.privacy},
         {"BSSID", t.BSSID},
         {"frequency", t.frequency},
         {"RSSI", t.RSSI},
@@ -157,6 +169,9 @@ void to_json(json& j, const WiFiReading& t) {
 }
 
 void from_json(const json& j, WiFiReading& t) {
+    j.at("timestamp").get_to(t.timestamp);
+    j.at("sensorId").get_to(t.sensorId);
+    j.at("privacy").get_to(t.privacy);
     j.at("BSSID").get_to(t.BSSID);
     j.at("frequency").get_to(t.frequency);
     j.at("RSSI").get_to(t.RSSI);
@@ -167,6 +182,9 @@ void from_json(const json& j, WiFiReading& t) {
 
 void to_json(json& j, const BluetoothReading& t) {
     j = json{
+        {"timestamp", t.timestamp},
+        {"sensorId", t.sensorId},
+        {"privacy", t.privacy},
         {"address", t.address},
         {"RSSI", t.RSSI},
         {"name", t.name},
@@ -174,6 +192,9 @@ void to_json(json& j, const BluetoothReading& t) {
 }
 
 void from_json(const json& j, BluetoothReading& t) {
+    j.at("timestamp").get_to(t.timestamp);
+    j.at("sensorId").get_to(t.sensorId);
+    j.at("privacy").get_to(t.privacy);
     j.at("address").get_to(t.address);
     j.at("RSSI").get_to(t.RSSI);
     j.at("name").get_to(t.name);
@@ -181,6 +202,9 @@ void from_json(const json& j, BluetoothReading& t) {
 
 void to_json(json& j, const AccelerometerReading& t) {
     j = json{
+        {"timestamp", t.timestamp},
+        {"sensorId", t.sensorId},
+        {"privacy", t.privacy},
         {"x", t.x},
         {"y", t.y},
         {"z", t.z}
@@ -188,6 +212,9 @@ void to_json(json& j, const AccelerometerReading& t) {
 }
 
 void from_json(const json& j, AccelerometerReading& t) {
+    j.at("timestamp").get_to(t.timestamp);
+    j.at("sensorId").get_to(t.sensorId);
+    j.at("privacy").get_to(t.privacy);
     j.at("x").get_to(t.x);
     j.at("y").get_to(t.y);
     j.at("z").get_to(t.z);
@@ -195,13 +222,19 @@ void from_json(const json& j, AccelerometerReading& t) {
 
 void to_json(json& j, const GyroscopeReading& t) {
     j = json{
+        {"timestamp", t.timestamp},
+        {"sensorId", t.sensorId},
+        {"privacy", t.privacy},
         {"x", t.x},
         {"y", t.y},
         {"z", t.z}
     };
 }
 
-void from_json(const json& j, GyroscopeReading& t) {
+void from_json(const json &j, GyroscopeReading &t) {
+    j.at("timestamp").get_to(t.timestamp);
+    j.at("sensorId").get_to(t.sensorId);
+    j.at("privacy").get_to(t.privacy);
     j.at("x").get_to(t.x);
     j.at("y").get_to(t.y);
     j.at("z").get_to(t.z);
@@ -209,6 +242,9 @@ void from_json(const json& j, GyroscopeReading& t) {
 
 void to_json(json& j, const MagnetometerReading& t) {
     j = json{
+        {"timestamp", t.timestamp},
+        {"sensorId", t.sensorId},
+        {"privacy", t.privacy},
         {"x", t.x},
         {"y", t.y},
         {"z", t.z}
@@ -216,16 +252,12 @@ void to_json(json& j, const MagnetometerReading& t) {
 }
 
 void from_json(const json& j, MagnetometerReading& t) {
+    j.at("timestamp").get_to(t.timestamp);
+    j.at("sensorId").get_to(t.sensorId);
+    j.at("privacy").get_to(t.privacy);
     j.at("x").get_to(t.x);
     j.at("y").get_to(t.y);
     j.at("z").get_to(t.z);
-}
-
-void to_json(json& j, const AbstractSensorParameters& t) {
-    j = json{};
-}
-
-void from_json(const json& j, AbstractSensorParameters& t) {
 }
 
 void to_json(json& j, const Sensor& t) {
@@ -244,19 +276,10 @@ void to_json(json& j, const Sensor& t) {
         j["rigRotation"] = t.rigRotation;
         j["rigTranslation"] = t.rigTranslation;
     }
-
-    switch (t.type) {
-    case SensorType::CAMERA:
-        j["params"] = t.cameraParams; break;
-    //TODO: add other types here (but if possible move params into CameraSensorReading)
-    default:
-        std::cout << "WARNING: unexpected sensor type seen while converting Sensor to JSON" << std::endl;
-        break;
-    }
 }
 
 void from_json(const json& j, Sensor& t) {
-    j.at("type").get_to(t.type);
+    t.type = sensorTypefromString(j.at("type"));
     j.at("id").get_to(t.id);
     if (j.find("name") != j.end()) {
         j.at("name").get_to(t.name);
@@ -273,83 +296,47 @@ void from_json(const json& j, Sensor& t) {
     if (j.find("rigTranslation") != j.end()) {
         j.at("rigTranslation").get_to(t.rigTranslation);
     }
-
-    if (j.find("params") != j.end()) {
-        // NOTE: the type switch below was added by Gabor to be able to parse it into correct type
-        switch (t.type) {
-        case SensorType::CAMERA:
-            j.at("params").get_to(t.cameraParams); break;
-        //TODO: add other types here. But I think the cameraParams should be moved from Sensor to CameraReading
-        default:
-            std::cout << "WARNING: unexpected sensor type seen while converting JSON to Sensor" << std::endl;
-            break;
-        }
-    }
 }
 
-void to_json(json& j, const SensorReading& t) {
-    j = json{
-        {"timestamp", t.timestamp},
-        {"sensorId", t.sensorId},
-        {"privacy", t.privacy},
-    };
-
-    // TODO: sensorType was added by Gabor to be able to decide how to parse it below
-    j["sensorType"] = t.sensorType;
-
-    switch (t.sensorType) {
-    case SensorType::CAMERA:
-        j["reading"] = t.cameraReading; break;
-    case SensorType::GEOLOCATION:
-        j["reading"] = t.geolocationReading; break;
-    case SensorType::WIFI:
-        j["reading"] = t.wifiReading; break;
-    case SensorType::BLUETOOTH:
-        j["reading"] = t.bluetoothReading; break;
-    case SensorType::ACCELEROMETER:
-        j["reading"] = t.accelerometerReading; break;
-    case SensorType::GYROSCOPE:
-        j["reading"] = t.gyroscopeReading; break;
-    case SensorType::MAGNETOMETER:
-        j["reading"] = t.magnetometerReading; break;
-    default:
-        std::cout << "WARNING: unexpected sensor type seen while converting SensorReading to JSON" << std::endl;
-        break;
-    }
+void to_json(json& j, const SensorReadings& t) {
+    j = json{};
+    if (!t.cameraReadings.empty())
+        j["cameraReadings"] = t.cameraReadings;
+    if (!t.geolocationReadings.empty())
+        j["geolocationReadings"] = t.geolocationReadings;
+    if (!t.wifiReadings.empty())
+        j["wifiReadings"] = t.wifiReadings;
+    if (!t.bluetoothReadings.empty())
+        j["bluetoothReadings"] = t.bluetoothReadings;
+    if (!t.accelerometerReadings.empty())
+        j["accelerometerReadings"] = t.accelerometerReadings;
+    if (!t.gyroscopeReadings.empty())
+        j["gyroscopeReadings"] = t.gyroscopeReadings;
+    if (!t.magnetometerReadings.empty())
+        j["magnetometerReadings"] = t.magnetometerReadings;
 }
 
-void from_json(const json& j, SensorReading& t) {
-    j.at("timestamp").get_to(t.timestamp);
-    j.at("sensorId").get_to(t.sensorId);
-    j.at("privacy").get_to(t.privacy);
-
-    // TODO: the sensorType key was added by Gabor to be able to decide how to parse it
-    if (j.find("sensorType") == j.end()) {
-        std::string errorMessage = "WARNING: no sensorType in the SensorReading";
-        std::cout << errorMessage << std::endl;
-        throw std::invalid_argument(errorMessage);
+void from_json(const json& j, SensorReadings& t) {
+    if (j.find("cameraReadings") != j.end()) {
+        j.at("cameraReadings").get_to(t.cameraReadings);
     }
-    j.at("sensorType").get_to(t.sensorType);
-
-    switch (t.sensorType)
-    {
-    case SensorType::CAMERA:
-        j.at("reading").get_to(t.cameraReading); break;
-    case SensorType::GEOLOCATION:
-        j.at("reading").get_to(t.geolocationReading); break;
-    case SensorType::WIFI:
-        j.at("reading").get_to(t.wifiReading); break;
-    case SensorType::BLUETOOTH:
-        j.at("reading").get_to(t.bluetoothReading); break;
-    case SensorType::ACCELEROMETER:
-        j.at("reading").get_to(t.accelerometerReading); break;
-    case SensorType::GYROSCOPE:
-        j.at("reading").get_to(t.gyroscopeReading); break;
-    case SensorType::MAGNETOMETER:
-        j.at("reading").get_to(t.magnetometerReading); break;
-    default:
-        std::cout << "WARNING: unexpected sensor type seen while converting JSON to SensorReading" << std::endl;
-        break;
+    if (j.find("geolocationReadings") != j.end()) {
+        j.at("geolocationReadings").get_to(t.geolocationReadings);
+    }
+    if (j.find("wifiReadings") != j.end()) {
+        j.at("wifiReadings").get_to(t.wifiReadings);
+    }
+    if (j.find("bluetoothReadings") != j.end()) {
+        j.at("bluetoothReadings").get_to(t.bluetoothReadings);
+    }
+    if (j.find("accelerometerReadings") != j.end()) {
+        j.at("accelerometerReadings").get_to(t.accelerometerReadings);
+    }
+    if (j.find("gyroscopeReadings") != j.end()) {
+        j.at("gyroscopeReadings").get_to(t.gyroscopeReadings);
+    }
+    if (j.find("magnetometerReadings") != j.end()) {
+        j.at("magnetometerReadings").get_to(t.magnetometerReadings);
     }
 }
 
