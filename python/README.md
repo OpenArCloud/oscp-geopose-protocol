@@ -15,6 +15,7 @@ conda create -n oscp_test
 conda activate oscp_test
 conda install -c anaconda requests
 conda install -c anaconda flask
+conda install -c anaconda pillow
 ```
 
 # Running on Windows
