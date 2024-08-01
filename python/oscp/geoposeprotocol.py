@@ -140,11 +140,20 @@ class CameraModel(str, Enum):
             raise NotImplementedError
 
 class CameraParameters(object):
-    def __init__(self, model = CameraModel.UNKNOWN, modelParams = [], minMaxDepth = [], minMaxDisparity = []):
+    def __init__(self, model = CameraModel.UNKNOWN, modelParams = None, minMaxDepth = None, minMaxDisparity = None):
         self.model = model # [optional] // TODO: string in the v1 standard, but enum is better suited here
-        self.modelParams = modelParams # [optional]
-        self.minMaxDepth = minMaxDepth # [optional] // for depth image
-        self.minMaxDisparity = minMaxDisparity # [optional] // for disparity image
+        if modelParams is None:
+            self.modelParams = []
+        else:
+            self.modelParams = modelParams # [optional]
+        if minMaxDepth is None:
+            self.minMaxDepth = []
+        else:
+            self.minMaxDepth = minMaxDepth # [optional] // for depth image
+        if minMaxDisparity is None:
+            self.minMaxDisparity = []
+        else:
+            self.minMaxDisparity = minMaxDisparity # [optional] // for disparity image
 
     def __str__(self):
         return "{" + \
@@ -168,11 +177,23 @@ class CameraParameters(object):
         return cameraParameters
 
 class Privacy(object):
-    def __init__(self, dataRetention = [], dataAcceptableUse = [], dataSanitizationApplied = [], dataSanitizationRequested = []):
-        self.dataRetention = dataRetention # acceptable policies for server-side data retention
-        self.dataAcceptableUse = dataAcceptableUse # acceptable policies for server-side data use
-        self.dataSanitizationApplied = dataSanitizationApplied # client-side data sanitization applied
-        self.dataSanitizationRequested = dataSanitizationRequested # server-side data sanitization requested
+    def __init__(self, dataRetention = None, dataAcceptableUse = None, dataSanitizationApplied = None, dataSanitizationRequested = None):
+        if dataRetention is None:
+            self.dataRetention = []
+        else:
+            self.dataRetention = dataRetention # acceptable policies for server-side data retention
+        if dataAcceptableUse is None:
+            self.dataAcceptableUse = []
+        else:
+            self.dataAcceptableUse = dataAcceptableUse # acceptable policies for server-side data use
+        if dataSanitizationApplied is None:
+            self.dataSanitizationApplied = []
+        else:
+            self.dataSanitizationApplied = dataSanitizationApplied # client-side data sanitization applied
+        if dataSanitizationRequested is None:
+            self.dataSanitizationRequested = []
+        else:
+            self.dataSanitizationRequested = dataSanitizationRequested # server-side data sanitization requested
 
     def __str__(self):
         return "{" + \
@@ -329,6 +350,7 @@ class BluetoothReading(object):
         return BluetoothReading(timestamp=jdata["timestamp"], sensorId=jdata["sensorId"],
                                 privacy=Privacy.fromJson(jdata["privacy"]),
                                 address=jdata["address"], RSSI=jdata["RSSI"], name=jdata["name"])
+
 class AccelerometerReading(object):
     def __init__(self, timestamp = 0, sensorId = "", privacy = Privacy(),
                  x = 0.0, y = 0.0, z = 0.0):
@@ -445,17 +467,38 @@ class Sensor(object):
         return sensor
 
 class SensorReadings(object):
-    def __init__(self, cameraReadings:[CameraReading] = [], geolocationReadings:[GeolocationReading] = [],
-                 accelerometerReadings:[AccelerometerReading] = [], gyroscopeReadings:[GyroscopeReading] = [],
-                 magnetometerReadings:[MagnetometerReading] = [], wifiReadings:[WiFiReading] = [],
-                 bluetoothReadings:[BluetoothReading] = []):
-        self.cameraReadings = cameraReadings # [optional]
-        self.geolocationReadings = geolocationReadings # [optional]
-        self.accelerometerReadings = accelerometerReadings # [optional]
-        self.gyroscopeReadings = gyroscopeReadings # [optional]
-        self.magnetometerReadings = magnetometerReadings # [optional]
-        self.wifiReadings = wifiReadings # [optional]
-        self.bluetoothReadings = bluetoothReadings # [optional]
+    def __init__(self, cameraReadings:[CameraReading] = None, geolocationReadings:[GeolocationReading] = None,
+                 accelerometerReadings:[AccelerometerReading] = None, gyroscopeReadings:[GyroscopeReading] = None,
+                 magnetometerReadings:[MagnetometerReading] = None, wifiReadings:[WiFiReading] = None,
+                 bluetoothReadings:[BluetoothReading] = None):
+        if cameraReadings is None:
+            self.cameraReadings = []
+        else:
+            self.cameraReadings = cameraReadings # [optional]
+        if geolocationReadings is None:
+            self.geolocationReadings = []
+        else:
+            self.geolocationReadings = geolocationReadings # [optional]
+        if accelerometerReadings is None:
+            self.accelerometerReadings = []
+        else:
+            self.accelerometerReadings = accelerometerReadings # [optional]
+        if gyroscopeReadings is None:
+            self.gyroscopeReadings = []
+        else:
+            self.gyroscopeReadings = gyroscopeReadings # [optional]
+        if magnetometerReadings is None:
+            self.magnetometerReadings = []
+        else:
+            self.magnetometerReadings = magnetometerReadings # [optional]
+        if wifiReadings is None:
+            self.wifiReadings = []
+        else:
+            self.wifiReadings = wifiReadings # [optional]
+        if bluetoothReadings is None:
+            self.bluetoothReadings = []
+        else:
+            self.bluetoothReadings = bluetoothReadings # [optional]
 
     def __str__(self):
         return "{" + \
@@ -538,13 +581,22 @@ class GeoPoseResponse(object):
 
 class GeoPoseRequest(object):
     def __init__(self, type:str = "geopose", id:str = str(uuid.uuid4()), timestamp = datetime.now(timezone.utc).timestamp()*1000,
-                 sensors:[Sensor] = [], sensorReadings:SensorReadings = SensorReadings(), priorPoses:[GeoPoseResponse] = []):
+                 sensors:[Sensor] = None, sensorReadings:SensorReadings = None, priorPoses:[GeoPoseResponse] = None):
         self.type = type # ex. geopose
         self.id = id
         self.timestamp = timestamp # The number of milliseconds since the Unix Epoch.
-        self.sensors = sensors
-        self.sensorReadings = sensorReadings
-        self.priorPoses = priorPoses # [optional] # TODO: are these of type GeoPose or GeoPoseResponse?
+        if sensors is None:
+            self.sensors = []
+        else:
+            self.sensors = sensors
+        if sensorReadings is None:
+            self.sensorReadings = SensorReadings()
+        else:
+            self.sensorReadings = sensorReadings
+        if priorPoses is None:
+            self.priorPoses = []
+        else:
+            self.priorPoses = priorPoses # [optional] # TODO: are these of type GeoPose or GeoPoseResponse?
 
     def __str__(self):
         return "{" + \
