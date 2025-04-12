@@ -14,6 +14,41 @@
 #include <oscp-gpp/geoposeprotocol.h>
 #include <oscp-gpp/geoposeprotocol_json.h>
 
+bool verify_version_header(const httplib::Headers& headers) {
+    if (headers.find("Accept") == headers.end()) {
+        throw std::invalid_argument("There is no Accept header in the request");
+    }
+    for (auto itr = headers.begin(); itr != headers.end(); itr++){
+        if ((itr->first).compare("Accept") == 0) {
+            std::string acceptHeader = itr -> second;
+            std::cout << "Accept header: " << acceptHeader << std::endl;
+            if (acceptHeader.find("application/vnd.oscp+json") == std::string::npos) {
+                throw std::invalid_argument("The Accept header is expected to contain application/vnd.oscp+json");
+            }
+            if (acceptHeader.find("version=") == std::string::npos) {
+                throw std::invalid_argument("The Accept header is expected to contain version=");
+            }
+            int versionMajor = 0;
+            int versionMinor = 0;
+            size_t vStrBegin = acceptHeader.find("version=") + std::string("version=").length();
+            size_t vStrEnd = acceptHeader.find(";", vStrBegin);
+            std::string vStr = acceptHeader.substr(vStrBegin, vStrEnd);
+            if (vStr.find(".") == std::string::npos) {
+                versionMajor = std::stoi(vStr); // there is no minor
+            }
+            std::string vMajorStr = vStr.substr(0, vStr.find("."));
+            std::string vMinorStr = vStr.substr(vStr.find(".") + 1, vStr.find(";"));
+            versionMajor = std::stoi(vMajorStr);
+            versionMinor = std::stoi(vMinorStr);
+            std::cout << "Version: " << versionMajor << " " << versionMinor << std::endl;
+            if (versionMajor != 2 && versionMinor != 0) {
+                throw std::invalid_argument("This server supports only GPP version=2.0");
+            }
+        }
+    }
+    return true;
+}
+
 int main(int argc, char* argv[])
 {
     try {
@@ -39,6 +74,8 @@ int main(int argc, char* argv[])
 
         server.Post("/geopose", [&](const httplib::Request& req, httplib::Response& res) {
             try {
+                verify_version_header(req.headers);
+
                 nlohmann::json requestDataJson = json::parse(req.body);
                 oscp::GeoPoseRequest gppRequest = requestDataJson.get<oscp::GeoPoseRequest>();
 

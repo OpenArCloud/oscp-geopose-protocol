@@ -98,24 +98,34 @@ geoPoseRequest.sensors.append(Sensor(type = SensorType.GEOLOCATION, id=kGeolocat
 geoPoseRequest.sensorReadings.geolocationReadings.append(geolocationReading)
 
 try:
-    headers = {"Content-Type":"application/json"}
+    # The API version can be specified by the HTTP Accept header using a vendor-specific media type as per RFC4288:
+    versionMajor = 2
+    versionMinor = 0
+    headers = {
+        "Content-Type":"application/json",
+        "Accept":f"application/vnd.oscp+json;version={versionMajor}.{versionMinor};"
+    }
     body = geoPoseRequest.toJson()
 
     # DEBUG
     geoPoseRequest.sensorReadings.cameraReadings[0].imageBytes = "<IMAGE_BASE64>"
-    print("Request (without image):")
+    print("GPP Request (without image):")
     print(geoPoseRequest.toJson())
     print()
 
-    response = requests.post(args.url, headers=headers, data=body)
-    print(f'Status: {response.status_code}')
+    response = requests.post(args.url, headers=headers, data=body, verify=False)
+    print(f'Status: {response.status_code} {response.reason}')
+    if not response.ok:
+        print(response.text)
+        exit()
+
     jdata = response.json()
     geoPoseResponse = GeoPoseResponse.fromJson(jdata)
 
     # DEBUG:
-    print("Response:")
+    print("GPP Response:")
     print(geoPoseResponse.toJson())
     print()
 
 except Exception as e:
-    print(f'err: {e}')
+    print(f'Error: {e}')

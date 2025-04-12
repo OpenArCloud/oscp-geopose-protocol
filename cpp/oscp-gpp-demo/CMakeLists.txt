@@ -37,10 +37,11 @@ if(stduuid_FOUND)
     message(STATUS "Found stduuid: ${stduuid_VERSION}")
 endif()
 
-find_package(OpenCV)
-if(stduuid_FOUND)
-    message(STATUS "Found OpenCV: ${stduuid_VERSION}")
-endif()
+# OpenCV is optional for image loading
+#find_package(OpenCV)
+#if(stduuid_FOUND)
+#    message(STATUS "Found OpenCV: ${stduuid_VERSION}")
+#endif()
 
 find_package(oscp-gpp REQUIRED)
 if(oscp-gpp_FOUND)
