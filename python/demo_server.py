@@ -10,7 +10,7 @@ from flask import Flask, request, jsonify, make_response, abort
 from argparse import ArgumentParser
 import base64
 from oscp.geoposeprotocol import *
-
+import re
 
 parser = ArgumentParser()
 parser.add_argument(
@@ -34,9 +34,52 @@ app = Flask(__name__)
 def status():
     return make_response("{\"status\": \"running\"}", 200)
 
+def parse_accept_type(accept_header):
+    TYPE_REGEX = re.compile(
+        r'application/vnd\.oscp\+json'# OSCP JSON
+    )
+    type = TYPE_REGEX.search(accept_header)
+    if type == None:
+        return False
+    return True
+
+def parse_accept_version(accept_header):
+    VERSION_REGEX = re.compile(
+        r'version='                 # version=
+        r'(?P<major>[0-9]+)'        # capture major number
+        r'(?:.(?P<minor>[0-9]+))?'  # capture minor number if exists
+    )
+    version = VERSION_REGEX.search(accept_header)
+    if version == None:
+        return False, None, None
+    #print(version.groupdict())
+    majorStr = version.groupdict()['major']
+    minorStr = version.groupdict()['minor']
+    try:
+        major = int(majorStr)
+        minor = None if minorStr == None else int(minorStr)
+    except:
+        return False, None, None
+    return True, major, minor
+
+def verify_version_header(headers):
+    if not 'Accept' in headers.keys():
+        return False, None, None
+    if not parse_accept_type(headers.get('Accept')):
+        return False, None, None
+    return parse_accept_version(headers.get('Accept'))
 
 @app.route('/geopose', methods=['POST'])
 def localize():
+    success, versionMajor, versionMinor = verify_version_header(request.headers)
+    if not success:
+        print('request has no or malformed Accept header. Add the header application/vnd.oscp+json;version=2.0')
+        abort(400, description='request has no or malformed Accept header. Add the header application/vnd.oscp+json;version=2.0')
+    print(f"Version: {versionMajor} {versionMinor}")
+    if versionMajor != 2 or versionMinor != 0:
+        print('This server supports only GPP v2.0')
+        abort(400, description='This server supports only GPP v2.0')
+
     jdata = request.get_json()
     geoPoseRequest = GeoPoseRequest.fromJson(jdata)
 
@@ -49,7 +92,8 @@ def localize():
     imgdata = base64.b64decode(geoPoseRequest.sensorReadings.cameraReadings[0].imageBytes)
 
     # DEBUG
-    #print("Request:")
+    #geoPoseRequest.sensorReadings.cameraReadings[0].imageBytes = "<IMAGE_BASE64>"
+    #print("Request (without image):")
     #print(geoPoseRequest.toJson())
     #print()
 
