@@ -103,7 +103,7 @@ try:
     versionMinor = 0
     headers = {
         "Content-Type":"application/json",
-        "Accept":f"application/vnd.oscp+json;version={versionMajor}.{versionMinor}"
+        "Accept":f"application/vnd.oscp+json;version={versionMajor}.{versionMinor};"
     }
     body = geoPoseRequest.toJson()
 
