@@ -173,7 +173,11 @@ int main(int argc, char* argv[]) {
 
         httplib::Client client(myVpsUrl, std::stoi(myVpsPort));
 
-        if (auto res = client.Post("/geopose", requestDataString, "application/json")) {
+        const httplib::Headers headers = {
+            {"Content-Type", "application/json"},
+            {"Accept", "application/vnd.oscp+json;version=2.0"}
+        };
+        if (auto res = client.Post("/geopose", headers, requestDataString, "application/json")) {
             if (res->status == 200) {
                 std::string responseDataString = res->body;
                 json responseDataJson = json::parse(responseDataString);
