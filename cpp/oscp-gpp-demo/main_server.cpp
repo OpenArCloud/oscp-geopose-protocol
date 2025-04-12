@@ -37,7 +37,7 @@ bool verify_version_header(const httplib::Headers& headers) {
                 versionMajor = std::stoi(vStr); // there is no minor
             }
             std::string vMajorStr = vStr.substr(0, vStr.find("."));
-            std::string vMinorStr = vStr.substr(vStr.find(".") + 1);
+            std::string vMinorStr = vStr.substr(vStr.find(".") + 1, vStr.find(";"));
             versionMajor = std::stoi(vMajorStr);
             versionMinor = std::stoi(vMinorStr);
             std::cout << "Version: " << versionMajor << " " << versionMinor << std::endl;

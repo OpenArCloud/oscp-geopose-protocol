@@ -175,7 +175,7 @@ int main(int argc, char* argv[]) {
 
         const httplib::Headers headers = {
             {"Content-Type", "application/json"},
-            {"Accept", "application/vnd.oscp+json;version=2.0"}
+            {"Accept", "application/vnd.oscp+json;version=2.0;"}
         };
         if (auto res = client.Post("/geopose", headers, requestDataString, "application/json")) {
             if (res->status == 200) {
