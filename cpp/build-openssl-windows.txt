@@ -1,5 +1,12 @@
-OpenSSL compilation on Windows 10 using Visual Studio 2022 (nmake)
 
+Update 2025-04-12:
+There is a simplified installation method described here:
+https://windowsforum.com/threads/how-to-install-openssl-on-windows-10-11-a-complete-guide.351961/
+
+
+
+Step-by-step compilation
+OpenSSL compilation on Windows 10 using Visual Studio 2022 (nmake)
 https://github.com/openssl/openssl/blob/master/NOTES-WINDOWS.md
 
 # Install Perl
