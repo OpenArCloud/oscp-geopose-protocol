@@ -1,0 +1,6 @@
+uuid
+requests
+datetime
+h3>=4.3.0
+piexif
+urllib3
