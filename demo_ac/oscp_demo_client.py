@@ -4,10 +4,9 @@ import json
 import sys
 import uuid
 from collections import namedtuple
-from datetime import datetime, timezone
-
-import h3 as h3
-import piexif as piexif
+import time
+import h3
+import piexif
 import requests
 import urllib3
 urllib3.disable_warnings()
@@ -46,12 +45,11 @@ class Menu:
             '0': ('Quit', self.quit)
         }
 
-    # TODO: either move the conversion out or rename to load_image_base64
-    def __load_image(self, img_file_name):
+    def __load_image_base64(self, img_file_name : str) -> str:
         """
         Load image and encode it in base64
-        :param img_file_name:
-        :return:
+        :param img_file_name:  path to the jpg-file of an image
+        :return:               base64 coded string of the image
         """
         try:
             img_file = open(img_file_name, 'rb').read()
@@ -72,7 +70,7 @@ class Menu:
         :return:
         """
         try:
-            return h3.geo_to_h3(float(lat), float(lon), RES)
+            return h3.latlng_to_cell(float(lat), float(lon), RES)
         except ValueError:
             print("Wrong latitude or longitude values\n")
             return None
@@ -82,51 +80,79 @@ class Menu:
 
     def __create_geopose_request(self, img_file_base64_string, lat, lon):
         """
-        Create request body for geopose
-        :param img_file_base64_string:
-        :param lat:
-        :param lon:
-        :return:
+        Create request body for geopose for both protocol versions
+        :param img_file_base64_string:  image base64 coded string
+        :param lat: latitude  of the nearby point, where the given image was taken
+        :param lon: longitude of the nearby point, where the given image was taken
+        :return:    json request
         """
-        return {
-            "id": str(uuid.uuid4()),
-            "timestamp": datetime.now(timezone.utc).timestamp()*1000,
-            "type": "geopose",
-            "sensors": [
-                {
-                    "id": "0",
-                    "type": "camera"
-                },
-                {
-                    "id": "1",
-                    "type": "geolocation"
-                }
-            ],
-            "sensorReadings": [
-                {
-                    "timestamp": datetime.now(timezone.utc).timestamp()*1000,
-                    "sensorId": "0",
-                    "reading": {
+        # protocol version: 1 or 2
+        geopose_ver = (input(f"Please, enter GeoPose protocol version: 1 or 2 (default: 2): ") or 2)
+
+        timestamp = time.time() * 1000.0            # in ms as double
+        # Commented as utcnow() is deprecated:
+        #delta = datetime.datetime.utcnow() - datetime.datetime(1970, 1, 1)
+        #timestamp = int(delta.total_seconds() * 1000 + 0.5)
+
+        if int(geopose_ver) != 2:  # if old ver.1
+            timestamp = int(timestamp + 0.5)        # v1 has format numeric<integer>
+            return {
+                "id": str(uuid.uuid4()),
+                "timestamp": timestamp,
+                "type": "geopose",
+                "sensors": [
+                    { "id": "0", "type": "camera" },
+                    { "id": "1", "type": "geolocation" }
+                ],
+                "sensorReadings": [
+                    {
+                        "timestamp": timestamp,
+                        "sensorId": "0",
+                        "reading": {
+                            "sequenceNumber": 0,
+                            "imageFormat": "JPG",
+                            "imageOrientation": { "mirrored": False, "rotation": 0 },
+                            "imageBytes": img_file_base64_string
+                        }
+                    },
+                    {
+                        "timestamp": timestamp,
+                        "sensorId": "1",
+                        "reading": {
+                            "latitude": float(lat),
+                            "longitude": float(lon),
+                            "altitude": 0
+                        }
+                    }
+                ]
+            }
+        else:
+            return {
+                "id": str(uuid.uuid4()),
+                "timestamp": timestamp,             # v2 has format numeric<double>
+                "type": "geopose",
+                "sensors": [
+                    { "id": "0", "type": "camera" },
+                    { "id": "1", "type": "geolocation" }
+                ],
+                "sensorReadings": {
+                    "cameraReadings": [{
+                        "timestamp": timestamp,
+                        "sensorId": "0",
                         "sequenceNumber": 0,
                         "imageFormat": "JPG",
-                        "imageOrientation": {
-                            "mirrored": False,
-                            "rotation": 0
-                        },
+                        "imageOrientation": { "mirrored": False, "rotation": 0 },
                         "imageBytes": img_file_base64_string
-                    }
-                },
-                {
-                    "timestamp": datetime.now(timezone.utc).timestamp()*1000,
-                    "sensorId": "1",
-                    "reading": {
+                    }],
+                    "geolocationReadings": [{
+                        "timestamp": timestamp,
+                        "sensorId": "1",
                         "latitude": float(lat),
                         "longitude": float(lon),
                         "altitude": 0
-                    }
+                    }]
                 }
-            ]
-        }
+            }
 
     def __get_valid_jwt_by_auth0(self):
         """
@@ -156,7 +182,7 @@ class Menu:
         :return:
         """
         if DEBUG_SKIP_SSD:
-            return "http://developer.augmented.city"
+            return "https://developer.augmented.city"
 
         headers = {'content-type': 'application/json',
                    'Authorization': f'Bearer {token}'}
@@ -180,7 +206,7 @@ class Menu:
         :return:
         """
         if DEBUG_SKIP_SSD:
-            return "http://developer.augmented.city"
+            return "https://developer.augmented.city"
 
         params = {"h3Index": h3Index}
         try:
@@ -310,7 +336,7 @@ class Menu:
         :return:
         """
         print("".center(80, '='))
-        print("AC demo application".center(80, ' '))
+        print("Augmented.City Geopose demo application".center(80, ' '))
         print("".center(80, '='))
         print()
         for item in self.choices.keys():
@@ -334,9 +360,9 @@ class Menu:
         Menu item
         :return:
         """
-        answer = (input("Would you like to continue with authorization? (default: no): ") or "no")
-        lat = (input(f"Please, enter latitude (default: {CHECK_PT.lat}): ") or CHECK_PT.lat)
-        lon = (input(f"Please, enter longitude (default: {CHECK_PT.lon}): ") or CHECK_PT.lon)
+        answer  = (input("Would you like to continue with authorization? (default: no): ") or "no")
+        lat     = (input(f"Please, enter latitude  (default: {CHECK_PT.lat}): ") or CHECK_PT.lat)
+        lon     = (input(f"Please, enter longitude (default: {CHECK_PT.lon}): ") or CHECK_PT.lon)
         country = (input("Please, enter the country for localization (default: US): ") or "US")
         h3_index = self.__create_h3_from_lat_lon(lat, lon)
         if h3_index is None:
@@ -373,7 +399,7 @@ class Menu:
         lat_from_img, lon_from_img = self.__get_exif_from_img(img_file_name)
         lat_from_img = lat_from_img or "N/A"
         lon_from_img = lon_from_img or "N/A"
-        lat = (input(f"Please, enter latitude (default: {lat_from_img}): ") or lat_from_img)
+        lat = (input(f"Please, enter latitude  (default: {lat_from_img}): ") or lat_from_img)
         lon = (input(f"Please, enter longitude (default: {lon_from_img}): ") or lon_from_img)
         h3_index = self.__create_h3_from_lat_lon(lat, lon)
         if h3_index is None:
@@ -383,9 +409,10 @@ class Menu:
         if ac_url is None:
             return
         print("Found service provider from SSD: ", ac_url)
-        img_file_base64_string = self.__load_image(img_file_name)
+        img_file_base64_string = self.__load_image_base64(img_file_name)
         if img_file_base64_string is None:
             return
+
         req_template = self.__create_geopose_request(img_file_base64_string, lat, lon)
         response = self.__post_geopose(ac_url, req_template)
         if response is None:
@@ -406,7 +433,7 @@ class Menu:
         lat_from_img, lon_from_img = self.__get_exif_from_img(img_file_name)
         lat_from_img = lat_from_img or "N/A"
         lon_from_img = lon_from_img or "N/A"
-        lat = (input(f"Please, enter latitude (default: {lat_from_img}): ") or lat_from_img)
+        lat = (input(f"Please, enter latitude  (default: {lat_from_img}): ") or lat_from_img)
         lon = (input(f"Please, enter longitude (default: {lon_from_img}): ") or lon_from_img)
         h3_index = self.__create_h3_from_lat_lon(lat, lon)
         if h3_index is None:
@@ -416,13 +443,16 @@ class Menu:
         if ac_url is None:
             return
         print("Found service provider from SSD: ", ac_url)
-        img_file_base64_string = self.__load_image(img_file_name)
+
+        img_file_base64_string = self.__load_image_base64(img_file_name)
         if img_file_base64_string is None:
             return
+
         req_template = self.__create_geopose_request(img_file_base64_string, lat, lon)
         response = self.__post_geopose(ac_url, req_template)
         if response is None:
             return
+
         print(f'Geopose with precise coordinates is:\n {response}')
         precise_lat, precise_lon = self.__get_precise_coords(response)
         if precise_lat is None or precise_lon is None:
@@ -447,7 +477,7 @@ class Menu:
         lat_from_img, lon_from_img = self.__get_exif_from_img(img_file_name)
         lat_from_img = lat_from_img or "N/A"
         lon_from_img = lon_from_img or "N/A"
-        lat = (input(f"Please, enter latitude (default: {lat_from_img}): ") or lat_from_img)
+        lat = (input(f"Please, enter latitude  (default: {lat_from_img}): ") or lat_from_img)
         lon = (input(f"Please, enter longitude (default: {lon_from_img}): ") or lon_from_img)
         h3_index = self.__create_h3_from_lat_lon(lat, lon)
         if h3_index is None:
@@ -457,7 +487,8 @@ class Menu:
         if ac_url is None:
             return
         print("Found service provider from SSD: ", ac_url)
-        img_file_base64_string = self.__load_image(img_file_name)
+
+        img_file_base64_string = self.__load_image_base64(img_file_name)
         if img_file_base64_string is None:
             return
         req_template = self.__create_geopose_request(img_file_base64_string, lat, lon)

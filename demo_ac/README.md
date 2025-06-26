@@ -1,3 +1,10 @@
+### Installation
+Tested on python version 3.11
+To install all required packages type in the command line:
+```
+pip3 install -r requirements.txt
+```
+
 # Geopose and objects pose endpoints
 Endpoints are available at https://developer.augmented.city/
 ### Usage
@@ -10,21 +17,21 @@ By applying these transformations to the points of the object model (rotation fi
 __Description of geopose and scrs fields__
 
 Geopose called `ecefPose` is intended to place objects in ECEF coordinate system which for example can be directly applied to Cesium platform.
-The object's frame should be oriented with +X forward direction and +Z in upwards prior to applying geopose transformations. If it is not, consider to combine the geopose with pre-rotations (using quaternion multiplication routines)
-(This is specific to Augmented City)
+The object's frame should be oriented with +X forward direction and +Z in upwards prior to applying geopose transformations. If it is not, consider to combine the geopose with pre-rotations (using quaternion multiplication routines).
+(This is specific to Augmented City).
 
 Geopose called `localPose` is a Local Tangent Plane transformation, which means it places the object in familiar cartesian world with axes aligned to cardinal directions. But it is implied that the object’s origin is located exactly in coordinates "latitude", "longitude", "altitude".
 This realization can be used by AR-enabled tools. It deals with object and world coordinate systems specific to current ARKit/ARCore. Object’s forward direction towards -Z and Up direction is +Y. World’s X points east, Y up, Z south
-(This is specific to Augmented City)
+(This is specific to Augmented City).
 
-Geopose called `geopose` is specified by OGC (https://www.ogc.org/standard/geopose/). It holds position as latitude, longitude, and height above the WGS84 ellopsoid, as well as a rotation quaternion w.r.t. the local East-North-Up coordinate system.
+Geopose called `geopose` is specified by OGC (https://www.ogc.org/standard/geopose/). It holds position as latitude, longitude, and height above the WGS84 ellipsoid, as well as a rotation quaternion w.r.t. the local East-North-Up coordinate system.
 
 #### /geopose - get geopose of an image
 
 __Response example__
 ```json
 {
-    "id": "9089876676575754",
+    "id": "ee5cfca9-abec-4aed-a128-c967b3c63cd6",
     "geopose": {
         "position": {
             "lat": 59.93522601509476,
@@ -42,7 +49,7 @@ __Response example__
         "position": -1,
         "orientation": -1
     },
-    "timestamp": "Fri, 04 Dec 2020 19:41:10 GMT",
+    "timestamp": 1750939398316,
     "type": "geopose"
 }
 ```
@@ -76,8 +83,8 @@ __Response example__
 ```json
 {
     "geopose": {
-        "id": "9089876676575754",
-        "timestamp": "Thu, 10 Dec 2020 17:14:03 GMT",
+        "id": "ee5cfca9-abec-4aed-a128-c967b3c63cd6",
+        "timestamp": 1750939398316,
         "type": "geopose",
         "geopose": {
             "position": {
@@ -114,7 +121,7 @@ __Response example__
         {
             "id": "8200",
             "tenant": "AugmentedCity",
-            "timestamp": "2020-12-10T17:14:01.795301",
+            "timestamp": 1750939666123,
             "type": "scr",
             "content": {
                 "id": "8200",
@@ -164,7 +171,6 @@ Open AR Cloud WebXR client: https://github.com/OpenArCloud/sparcl
 Open AR Cloud Unity client: https://github.com/OpenArCloud/oscp-unity-client
 
 Open AR Cloud Cesium demo (outdated): https://github.com/OpenArCloud/browser_userclient/tree/Cesium
-
 
 
 #### Try using with Cesium Sandcastle (outdated)
