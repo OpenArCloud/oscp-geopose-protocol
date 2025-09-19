@@ -3,7 +3,7 @@ OSCP GeoPose Protocol
 
 ## Purpose
 
-Early version of a standard GeoPoseProtocol API i.e. a request/response protocol for visual localization. The GeoPose encoding has been standardized by [OGC GeoPose Working Group](https://www.ogc.org/projects/groups/geoposeswg).
+Early version of a standard GeoPoseProtocol API i.e. a request/response protocol for visual localization. The OGC GeoPose encoding has been standardized with contributions from OARC members and can be read here [OGC GeoPose Standard]([https://www.ogc.org/projects/groups/geoposeswg](https://docs.ogc.org/is/21-056r11/21-056r11.html)).
 
 
 
